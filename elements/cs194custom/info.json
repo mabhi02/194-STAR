@@ -1,0 +1,17 @@
+{
+    "controller": "cs194custom.py",
+    "dependencies": {
+        "elementScripts": [
+            "cs194custom.js"
+        ],
+        "elementStyles": [
+            "cs194custom.css"
+        ],
+        "clientFilesCourseScripts": [
+            "sharedElementCode.js"
+        ],
+        "clientFilesCourseStyles": [
+            "sharedElementStyles.css"
+        ]
+    }
+}

@@ -1,0 +1,145 @@
+<style>
+        .mainz {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        table {
+            width: 60%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: left;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #007acc;
+            color: white;
+        }
+        .dropzone {
+            width: 100%;
+            height: 40px;
+            border: 2px dashed #007acc;
+            background-color: white;
+            text-align: center;
+            line-height: 40px;
+            color: gray;
+            cursor: pointer;
+        }
+        .drag-item {
+            padding: 5px 10px;
+            background-color: #007acc;
+            color: white;
+            border-radius: 5px;
+            cursor: grab;
+            display: inline-block;
+            margin: 5px;
+        }
+        .correct {
+            background-color: lightgreen;
+        }
+        .wrong {
+            background-color: lightcoral;
+        }
+    </style>
+    <script>
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+        
+        function drag(event) {
+            event.dataTransfer.setData("text", event.target.innerText);
+        }
+        
+        function drop(event, correctValue) {
+            event.preventDefault();
+            const data = event.dataTransfer.getData("text");
+            event.target.innerText = data;
+            
+            if (data === correctValue) {
+                event.target.classList.add('correct');
+                event.target.classList.remove('wrong');
+            } else {
+                event.target.classList.add('wrong');
+                event.target.classList.remove('correct');
+            }
+        }
+    </script>
+<div class="mainz">
+    <h2 style="color: white;">Boat Schedule Table</h2>
+    <div>
+        <span class="drag-item" draggable="true" ondragstart="drag(event)">Freshwater</span>
+        <span class="drag-item" draggable="true" ondragstart="drag(event)">Saltwater</span>
+    </div>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Color</th>
+            <th>Date Accessed</th>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>Paddle</td>
+            <td class="dropzone" ondrop="drop(event, 'Freshwater')" ondragover="allowDrop(event)">--Selection--</td>
+            <td>Red</td>
+            <td>12-01-2021</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>Ole Reliable</td>
+            <td class="dropzone" ondrop="drop(event, 'Saltwater')" ondragover="allowDrop(event)">--Selection--</td>
+            <td>Green</td>
+            <td>12-01-2021</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>Shells</td>
+            <td class="dropzone" ondrop="drop(event, 'Freshwater')" ondragover="allowDrop(event)">--Selection--</td>
+            <td>Green</td>
+            <td>12-02-2021</td>
+        </tr>
+        <tr>
+            <td>4</td>
+            <td>Narwhal</td>
+            <td class="dropzone" ondrop="drop(event, 'Saltwater')" ondragover="allowDrop(event)">--Selection--</td>
+            <td>Red</td>
+            <td>12-04-2021</td>
+        </tr>
+        <tr>
+            <td>5</td>
+            <td>Caribbean</td>
+            <td class="dropzone" ondrop="drop(event, 'Saltwater')" ondragover="allowDrop(event)">--Selection--</td>
+            <td>Yellow</td>
+            <td>12-05-2021</td>
+        </tr>
+        <tr>
+            <td>6</td>
+            <td>Delta</td>
+            <td class="dropzone" ondrop="drop(event, 'Freshwater')" ondragover="allowDrop(event)">--Selection--</td>
+            <td>Blue</td>
+            <td>12-05-2021</td>
+        </tr>
+        <tr>
+            <td>7</td>
+            <td>Nets</td>
+            <td class="dropzone" ondrop="drop(event, 'Saltwater')" ondragover="allowDrop(event)">--Selection--</td>
+            <td>Orange</td>
+            <td>12-07-2021</td>
+        </tr>
+    </table>
+
+</div>
