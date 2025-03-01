@@ -1,0 +1,17 @@
+{
+    "controller": "sqlElement.py",
+    "dependencies": {
+        "elementScripts": [
+            "sqlElement.js"
+        ],
+        "elementStyles": [
+            "sqlElement.css"
+        ],
+        "clientFilesCourseScripts": [
+            "sharedElementCode.js"
+        ],
+        "clientFilesCourseStyles": [
+            "sharedElementStyles.css"
+        ]
+    }
+}
