@@ -339,18 +339,85 @@
         .toast {
             min-width: 250px;
         }
-
+        
         /* Added for better drag and drop experience */
         .dropped {
             margin-bottom: 5px;
             position: relative;
             padding-right: 40px;
         }
-
+        
         .dropped button {
             position: absolute;
             right: 5px;
             top: 5px;
+        }
+        
+        /* SQL Query Builder */
+        .sql-builder-container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .builder-section {
+            margin-bottom: 15px;
+        }
+        
+        .builder-section label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        .builder-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .column-option {
+            background-color: #f1f3f5;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .column-option:hover {
+            background-color: #e9ecef;
+        }
+        
+        .column-option.selected {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-color: var(--primary);
+        }
+        
+        .join-container {
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .join-container.active {
+            display: block;
+        }
+        
+        .sql-preview {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border-left: 3px solid var(--primary);
+            white-space: pre-wrap;
+        }
+        
+        .nav-tabs {
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -361,14 +428,123 @@
                 <i class="fas fa-database me-2"></i>SQL Learning Quiz
             </a>
             <div class="d-flex">
-                <button id="reset-quiz" class="btn btn-outline-light btn-sm">
+                <button id="reset-quiz" class="btn btn-outline-light btn-sm me-2">
                     <i class="fas fa-redo me-1"></i>Reset Quiz
+                </button>
+                <button id="toggle-builder" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-tools me-1"></i>Query Builder
                 </button>
             </div>
         </div>
     </nav>
 
     <div class="container mt-4">
+        <!-- SQL Query Builder Section -->
+        <div id="sql-builder-section" class="sql-builder-container" style="display: none;">
+            <h4 class="mb-3">
+                <i class="fas fa-tools me-2"></i>SQL Query Builder
+            </h4>
+            
+            <ul class="nav nav-tabs" id="builder-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" id="select-tab" data-bs-toggle="tab" href="#select-content">SELECT</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="join-tab" data-bs-toggle="tab" href="#join-content">JOIN</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="where-tab" data-bs-toggle="tab" href="#where-content">WHERE</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="order-tab" data-bs-toggle="tab" href="#order-content">ORDER BY</a>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <!-- SELECT Tab -->
+                <div class="tab-pane fade show active" id="select-content">
+                    <div class="builder-section">
+                        <label>Select Table:</label>
+                        <select id="select-table" class="form-select">
+                            <option value="">-- Select a table --</option>
+                            <!-- Tables will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="builder-section">
+                        <label>Select Columns:</label>
+                        <div id="select-columns" class="builder-columns">
+                            <!-- Columns will be populated based on selected table -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- JOIN Tab -->
+                <div class="tab-pane fade" id="join-content">
+                    <div class="builder-section">
+                        <label>Join Type:</label>
+                        <select id="join-type" class="form-select">
+                            <option value="INNER JOIN">INNER JOIN</option>
+                            <option value="LEFT JOIN">LEFT JOIN</option>
+                            <option value="RIGHT JOIN">RIGHT JOIN</option>
+                            <option value="FULL JOIN">FULL JOIN</option>
+                        </select>
+                    </div>
+                    
+                    <div class="builder-section">
+                        <label>Join Table:</label>
+                        <select id="join-table" class="form-select">
+                            <option value="">-- Select a table --</option>
+                            <!-- Tables will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div class="builder-section">
+                        <label>ON Condition:</label>
+                        <input type="text" id="join-condition" class="form-control" 
+                               placeholder="e.g., table1.id = table2.table1_id">
+                    </div>
+                </div>
+                
+                <!-- WHERE Tab -->
+                <div class="tab-pane fade" id="where-content">
+                    <div class="builder-section">
+                        <label>Where Condition:</label>
+                        <input type="text" id="where-condition" class="form-control" 
+                               placeholder="e.g., column > 100">
+                    </div>
+                </div>
+                
+                <!-- ORDER BY Tab -->
+                <div class="tab-pane fade" id="order-content">
+                    <div class="builder-section">
+                        <label>Order By:</label>
+                        <input type="text" id="order-column" class="form-control" 
+                               placeholder="e.g., column_name">
+                    </div>
+                    
+                    <div class="builder-section">
+                        <select id="order-direction" class="form-select">
+                            <option value="ASC">Ascending (ASC)</option>
+                            <option value="DESC">Descending (DESC)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sql-preview" id="sql-preview">SELECT * FROM table</div>
+            
+            <div class="d-flex justify-content-between mt-3">
+                <button id="reset-builder" class="btn btn-secondary">
+                    <i class="fas fa-undo me-1"></i>Reset
+                </button>
+                <button id="run-builder-query" class="btn btn-success">
+                    <i class="fas fa-play me-1"></i>Run Query
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Section -->
         <div class="row">
             <div class="col-md-8">
                 <div class="progress">
@@ -454,9 +630,266 @@
                 // Initialize the application
                 const app = new SQLQuizApp(db);
                 app.initialize();
+                
+                // Initialize the query builder
+                const builder = new SQLQueryBuilder(db, app);
+                builder.initialize();
             }).catch(err => {
                 showToast('Error initializing SQL database: ' + err.message, 'danger');
             });
+
+            // SQLQueryBuilder class
+            class SQLQueryBuilder {
+                constructor(db, app) {
+                    this.db = db;
+                    this.app = app;
+                    this.selectedTable = '';
+                    this.selectedColumns = [];
+                    this.joinType = 'INNER JOIN';
+                    this.joinTable = '';
+                    this.joinCondition = '';
+                    this.whereCondition = '';
+                    this.orderColumn = '';
+                    this.orderDirection = 'ASC';
+                    
+                    // Builder elements
+                    this.builderSection = document.getElementById('sql-builder-section');
+                    this.toggleBtn = document.getElementById('toggle-builder');
+                    this.resetBtn = document.getElementById('reset-builder');
+                    this.runBtn = document.getElementById('run-builder-query');
+                    
+                    // SELECT tab elements
+                    this.selectTableEl = document.getElementById('select-table');
+                    this.selectColumnsEl = document.getElementById('select-columns');
+                    
+                    // JOIN tab elements
+                    this.joinTypeEl = document.getElementById('join-type');
+                    this.joinTableEl = document.getElementById('join-table');
+                    this.joinConditionEl = document.getElementById('join-condition');
+                    
+                    // WHERE tab elements
+                    this.whereConditionEl = document.getElementById('where-condition');
+                    
+                    // ORDER BY tab elements
+                    this.orderColumnEl = document.getElementById('order-column');
+                    this.orderDirectionEl = document.getElementById('order-direction');
+                    
+                    // SQL preview element
+                    this.sqlPreviewEl = document.getElementById('sql-preview');
+                }
+                
+                initialize() {
+                    // Toggle builder visibility
+                    this.toggleBtn.addEventListener('click', () => {
+                        if (this.builderSection.style.display === 'none') {
+                            this.builderSection.style.display = 'block';
+                            this.populateTables();
+                            this.updateSqlPreview();
+                        } else {
+                            this.builderSection.style.display = 'none';
+                        }
+                    });
+                    
+                    // Reset builder
+                    this.resetBtn.addEventListener('click', () => {
+                        this.resetBuilder();
+                    });
+                    
+                    // Run query
+                    this.runBtn.addEventListener('click', () => {
+                        this.runQuery();
+                    });
+                    
+                    // Add event listeners for form controls
+                    this.selectTableEl.addEventListener('change', () => {
+                        this.selectedTable = this.selectTableEl.value;
+                        this.populateColumns();
+                        this.updateSqlPreview();
+                    });
+                    
+                    this.joinTypeEl.addEventListener('change', () => {
+                        this.joinType = this.joinTypeEl.value;
+                        this.updateSqlPreview();
+                    });
+                    
+                    this.joinTableEl.addEventListener('change', () => {
+                        this.joinTable = this.joinTableEl.value;
+                        this.updateSqlPreview();
+                    });
+                    
+                    this.joinConditionEl.addEventListener('input', () => {
+                        this.joinCondition = this.joinConditionEl.value;
+                        this.updateSqlPreview();
+                    });
+                    
+                    this.whereConditionEl.addEventListener('input', () => {
+                        this.whereCondition = this.whereConditionEl.value;
+                        this.updateSqlPreview();
+                    });
+                    
+                    this.orderColumnEl.addEventListener('input', () => {
+                        this.orderColumn = this.orderColumnEl.value;
+                        this.updateSqlPreview();
+                    });
+                    
+                    this.orderDirectionEl.addEventListener('change', () => {
+                        this.orderDirection = this.orderDirectionEl.value;
+                        this.updateSqlPreview();
+                    });
+                }
+                
+                populateTables() {
+                    // Clear existing options
+                    this.selectTableEl.innerHTML = '<option value="">-- Select a table --</option>';
+                    this.joinTableEl.innerHTML = '<option value="">-- Select a table --</option>';
+                    
+                    // Get tables from the database
+                    try {
+                        const tables = this.db.exec("SELECT name FROM sqlite_master WHERE type='table'")[0].values;
+                        
+                        // Add options for each table
+                        tables.forEach(table => {
+                            const tableName = table[0];
+                            
+                            // Add to SELECT table dropdown
+                            const selectOption = document.createElement('option');
+                            selectOption.value = tableName;
+                            selectOption.textContent = tableName;
+                            this.selectTableEl.appendChild(selectOption);
+                            
+                            // Add to JOIN table dropdown
+                            const joinOption = document.createElement('option');
+                            joinOption.value = tableName;
+                            joinOption.textContent = tableName;
+                            this.joinTableEl.appendChild(joinOption);
+                        });
+                    } catch (error) {
+                        console.error('Error fetching tables:', error);
+                    }
+                }
+                
+                populateColumns() {
+                    // Clear existing columns
+                    this.selectColumnsEl.innerHTML = '';
+                    this.selectedColumns = [];
+                    
+                    if (!this.selectedTable) return;
+                    
+                    // Get columns for the selected table
+                    try {
+                        const pragma = this.db.exec(`PRAGMA table_info(${this.selectedTable})`)[0];
+                        
+                        // Create a clickable option for each column
+                        pragma.values.forEach(col => {
+                            const colName = col[1];
+                            const colType = col[2];
+                            
+                            // Create column option element
+                            const columnEl = document.createElement('div');
+                            columnEl.className = 'column-option';
+                            columnEl.dataset.column = `${this.selectedTable}.${colName}`;
+                            columnEl.textContent = `${this.selectedTable}.${colName}`;
+                            
+                            // Add click event to toggle selection
+                            columnEl.addEventListener('click', () => {
+                                columnEl.classList.toggle('selected');
+                                
+                                if (columnEl.classList.contains('selected')) {
+                                    this.selectedColumns.push(`${this.selectedTable}.${colName}`);
+                                } else {
+                                    this.selectedColumns = this.selectedColumns.filter(
+                                        col => col !== `${this.selectedTable}.${colName}`
+                                    );
+                                }
+                                
+                                this.updateSqlPreview();
+                            });
+                            
+                            this.selectColumnsEl.appendChild(columnEl);
+                        });
+                    } catch (error) {
+                        console.error('Error fetching columns:', error);
+                    }
+                }
+                
+                updateSqlPreview() {
+                    let sql = 'SELECT ';
+                    
+                    // Add columns
+                    if (this.selectedColumns.length > 0) {
+                        sql += this.selectedColumns.join(', ');
+                    } else {
+                        sql += '*';
+                    }
+                    
+                    // Add FROM clause
+                    if (this.selectedTable) {
+                        sql += ` FROM ${this.selectedTable}`;
+                    } else {
+                        sql += ' FROM table';
+                    }
+                    
+                    // Add JOIN clause
+                    if (this.joinTable && this.joinCondition) {
+                        sql += `\n${this.joinType} ${this.joinTable}\nON ${this.joinCondition}`;
+                    }
+                    
+                    // Add WHERE clause
+                    if (this.whereCondition) {
+                        sql += `\nWHERE ${this.whereCondition}`;
+                    }
+                    
+                    // Add ORDER BY clause
+                    if (this.orderColumn) {
+                        sql += `\nORDER BY ${this.orderColumn} ${this.orderDirection}`;
+                    }
+                    
+                    // Update SQL preview
+                    this.sqlPreviewEl.textContent = sql;
+                }
+                
+                resetBuilder() {
+                    // Reset all fields
+                    this.selectedTable = '';
+                    this.selectedColumns = [];
+                    this.joinType = 'INNER JOIN';
+                    this.joinTable = '';
+                    this.joinCondition = '';
+                    this.whereCondition = '';
+                    this.orderColumn = '';
+                    this.orderDirection = 'ASC';
+                    
+                    // Reset form controls
+                    this.selectTableEl.value = '';
+                    this.selectColumnsEl.innerHTML = '';
+                    this.joinTypeEl.value = 'INNER JOIN';
+                    this.joinTableEl.value = '';
+                    this.joinConditionEl.value = '';
+                    this.whereConditionEl.value = '';
+                    this.orderColumnEl.value = '';
+                    this.orderDirectionEl.value = 'ASC';
+                    
+                    // Update SQL preview
+                    this.updateSqlPreview();
+                }
+                
+                runQuery() {
+                    const sql = this.sqlPreviewEl.textContent;
+                    
+                    if (sql.trim() === '' || !this.selectedTable) {
+                        showToast('Please select a table and build a valid query', 'warning');
+                        return;
+                    }
+                    
+                    try {
+                        // Execute the query and display results
+                        this.app.executeQueryAndDisplay(sql);
+                        showToast('Query executed successfully', 'success');
+                    } catch (error) {
+                        showToast(`Error executing query: ${error.message}`, 'danger');
+                    }
+                }
+            }
             
             // Create and manage the quiz app
             class SQLQuizApp {
@@ -703,6 +1136,68 @@
                         this.db.run(
                             'INSERT INTO employees VALUES (?, ?, ?, ?, ?, ?)',
                             employee
+                        );
+                    });
+                    
+                    // Create books table for the query builder example
+                    this.db.run(`
+                        CREATE TABLE books (
+                            id INTEGER PRIMARY KEY,
+                            title TEXT,
+                            price REAL,
+                            publication_year INTEGER,
+                            author_id INTEGER
+                        )
+                    `);
+                    
+                    // Insert sample books
+                    const bookData = [
+                        [1, 'SQL Fundamentals', 29.99, 2020, 1],
+                        [2, 'Advanced SQL', 49.99, 2021, 1],
+                        [3, 'Database Design', 39.99, 2019, 2],
+                        [4, 'Web Development Basics', 24.99, 2022, 3],
+                        [5, 'Python Programming', 34.99, 2021, 4],
+                        [6, 'JavaScript Mastery', 44.99, 2022, 3],
+                        [7, 'Data Science Essentials', 54.99, 2020, 5],
+                        [8, 'Machine Learning', 59.99, 2021, 5]
+                    ];
+                    
+                    bookData.forEach(book => {
+                        this.db.run(
+                            'INSERT INTO books VALUES (?, ?, ?, ?, ?)',
+                            book
+                        );
+                    });
+                    
+                    // Create book_orders table
+                    this.db.run(`
+                        CREATE TABLE book_orders (
+                            id INTEGER PRIMARY KEY,
+                            book_id INTEGER,
+                            quantity INTEGER,
+                            order_date TEXT,
+                            FOREIGN KEY (book_id) REFERENCES books(id)
+                        )
+                    `);
+                    
+                    // Insert sample book orders
+                    const bookOrdersData = [
+                        [1, 1, 3, '2023-01-15'],
+                        [2, 2, 1, '2023-01-20'],
+                        [3, 3, 2, '2023-02-05'],
+                        [4, 4, 1, '2023-02-10'],
+                        [5, 5, 4, '2023-03-15'],
+                        [6, 6, 2, '2023-03-20'],
+                        [7, 1, 1, '2023-04-10'],
+                        [8, 2, 2, '2023-04-15'],
+                        [9, 7, 3, '2023-05-05'],
+                        [10, 8, 1, '2023-05-10']
+                    ];
+                    
+                    bookOrdersData.forEach(order => {
+                        this.db.run(
+                            'INSERT INTO book_orders VALUES (?, ?, ?, ?)',
+                            order
                         );
                     });
                 }
@@ -1502,6 +1997,7 @@
                                 correctQueryParts = correctQueryParts.replace(`[${blank}]`, value);
                             }
                             correctQuery = correctQueryParts;
+                            
                             // Construct the user query
                             let userQueryParts = question.template;
                             for (const [blank, value] of Object.entries(userAnswer)) {
