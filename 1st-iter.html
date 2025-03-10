@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Query Builder</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --highlight-color: #e74c3c;
+            --background-color: #f5f7fa;
+            --box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            --border-radius: 5px;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--background-color);
+            padding: 20px;
+            color: var(--primary-color);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            grid-gap: 20px;
+        }
+        
+        .query-builder, .results-viewer {
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        h1, h2 {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+        }
+        
+        .query-component {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .component-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 100px;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+        
+        .query-box {
+            display: inline-flex;
+            align-items: center;
+            border: 2px solid #ccc;
+            border-radius: var(--border-radius);
+            padding: 10px;
+            min-height: 50px;
+            width: calc(100% - 110px);
+            margin-left: 5px;
+            cursor: pointer;
+            position: relative;
+            background-color: white;
+        }
+        
+        .query-box:hover {
+            border-color: var(--secondary-color);
+        }
+        
+        .query-box.active {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.3);
+        }
+        
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 105px;
+            width: calc(100% - 110px);
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .dropdown.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .selected-item {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            margin-right: 5px;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .remove-item {
+            margin-left: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .query-preview {
+            margin-top: 30px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            min-height: 150px;
+        }
+        
+        .query-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .run-button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .run-button:hover {
+            background-color: #2980b9;
+        }
+        
+        .keyword {
+            color: #0000ff;
+            font-weight: bold;
+        }
+        
+        .identifier {
+            color: #800000;
+        }
+        
+        .operator {
+            color: #808080;
+        }
+        
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .results-table th, .results-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        .results-table th {
+            background-color: #f2f2f2;
+            color: var(--primary-color);
+        }
+        
+        .results-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .results-table tr:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .hint {
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .error {
+            color: var(--highlight-color);
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .table-info {
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: var(--border-radius);
+            padding: 15px;
+        }
+        
+        .table-name {
+            font-weight: bold;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+        
+        .column-list {
+            list-style-type: none;
+            margin-left: 15px;
+        }
+        
+        .column-list li {
+            margin-bottom: 5px;
+        }
+        
+        .column-type {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="query-builder">
+            <h1>SQL Query Builder</h1>
+            
+            <!-- Query Type Selector -->
+            <div class="query-component">
+                <label class="component-label">Query Type:</label>
+                <div class="query-box">SELECT</div>
+                <div class="dropdown">
+                    <div class="dropdown-item">SELECT</div>
+                    <div class="dropdown-item">INSERT</div>
+                    <div class="dropdown-item">UPDATE</div>
+                    <div class="dropdown-item">DELETE</div>
+                </div>
+            </div>
+            
+            <!-- SELECT Component -->
+            <div class="query-component">
+                <label class="component-label">SELECT:</label>
+                <div class="query-box active">
+                    <span class="selected-item">title <span class="remove-item">×</span></span>
+                    <span class="selected-item">author_id <span class="remove-item">×</span></span>
+                </div>
+                <div class="dropdown show">
+                    <div class="dropdown-item">book_id</div>
+                    <div class="dropdown-item">title</div>
+                    <div class="dropdown-item">author_id</div>
+                    <div class="dropdown-item">price</div>
+                    <div class="dropdown-item">stock</div>
+                    <div class="dropdown-item">publication_year</div>
+                </div>
+                <div class="hint">Select columns or * for all columns</div>
+            </div>
+            
+            <!-- FROM Component -->
+            <div class="query-component">
+                <label class="component-label">FROM:</label>
+                <div class="query-box">books</div>
+                <div class="dropdown">
+                    <div class="dropdown-item">books</div>
+                    <div class="dropdown-item">authors</div>
+                    <div class="dropdown-item">orders</div>
+                </div>
+            </div>
+            
+            <!-- JOIN Component -->
+            <div class="query-component">
+                <label class="component-label">JOIN:</label>
+                <div class="query-box">INNER JOIN authors ON books.author_id = authors.author_id</div>
+                <div class="dropdown">
+                    <div class="dropdown-item">INNER JOIN</div>
+                    <div class="dropdown-item">LEFT JOIN</div>
+                    <div class="dropdown-item">RIGHT JOIN</div>
+                    <div class="dropdown-item">FULL OUTER JOIN</div>
+                </div>
+            </div>
+            
+            <!-- WHERE Component -->
+            <div class="query-component">
+                <label class="component-label">WHERE:</label>
+                <div class="query-box">price < 30 AND publication_year > 2020</div>
+                <div class="dropdown">
+                    <div class="dropdown-item">book_id</div>
+                    <div class="dropdown-item">title</div>
+                    <div class="dropdown-item">author_id</div>
+                    <div class="dropdown-item">price</div>
+                    <div class="dropdown-item">stock</div>
+                    <div class="dropdown-item">publication_year</div>
+                </div>
+            </div>
+            
+            <!-- ORDER BY Component -->
+            <div class="query-component">
+                <label class="component-label">ORDER BY:</label>
+                <div class="query-box">price DESC</div>
+                <div class="dropdown">
+                    <div class="dropdown-item">book_id</div>
+                    <div class="dropdown-item">title</div>
+                    <div class="dropdown-item">author_id</div>
+                    <div class="dropdown-item">price</div>
+                    <div class="dropdown-item">stock</div>
+                    <div class="dropdown-item">publication_year</div>
+                </div>
+            </div>
+            
+            <!-- Query Preview -->
+            <div class="query-preview-header">
+                <h2>SQL Query</h2>
+                <button class="run-button">Run Query</button>
+            </div>
+            <div class="query-preview">
+                <span class="keyword">SELECT</span> <span class="identifier">title</span>, <span class="identifier">author_id</span>
+                <span class="keyword">FROM</span> <span class="identifier">books</span>
+                <span class="keyword">INNER JOIN</span> <span class="identifier">authors</span> <span class="keyword">ON</span> <span class="identifier">books.author_id</span> <span class="operator">=</span> <span class="identifier">authors.author_id</span>
+                <span class="keyword">WHERE</span> <span class="identifier">price</span> <span class="operator"><</span> 30 <span class="keyword">AND</span> <span class="identifier">publication_year</span> <span class="operator">></span> 2020
+                <span class="keyword">ORDER BY</span> <span class="identifier">price</span> <span class="keyword">DESC</span>
+            </div>
+        </div>
+        
+        <div class="results-viewer">
+            <h2>Results</h2>
+            
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>title</th>
+                        <th>author_id</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Coding for Beginners</td>
+                        <td>103</td>
+                    </tr>
+                    <tr>
+                        <td>Cooking Essentials</td>
+                        <td>105</td>
+                    </tr>
+                    <tr>
+                        <td>Science Explained</td>
+                        <td>106</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="table-info">
+                <div class="table-name">books</div>
+                <ul class="column-list">
+                    <li>book_id <span class="column-type">integer</span></li>
+                    <li>title <span class="column-type">varchar(100)</span></li>
+                    <li>author_id <span class="column-type">integer</span></li>
+                    <li>price <span class="column-type">decimal(10,2)</span></li>
+                    <li>stock <span class="column-type">integer</span></li>
+                    <li>publication_year <span class="column-type">integer</span></li>
+                </ul>
+                
+                <div class="table-name">authors</div>
+                <ul class="column-list">
+                    <li>author_id <span class="column-type">integer</span></li>
+                    <li>name <span class="column-type">varchar(100)</span></li>
+                    <li>nationality <span class="column-type">varchar(50)</span></li>
+                    <li>books_written <span class="column-type">integer</span></li>
+                </ul>
+                
+                <div class="table-name">orders</div>
+                <ul class="column-list">
+                    <li>order_id <span class="column-type">integer</span></li>
+                    <li>book_id <span class="column-type">integer</span></li>
+                    <li>customer_id <span class="column-type">integer</span></li>
+                    <li>quantity <span class="column-type">integer</span></li>
+                    <li>order_date <span class="column-type">date</span></li>
+                    <li>shipped <span class="column-type">boolean</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sample database for query execution
+            const database = {
+                books: [
+                    { book_id: 1, title: "The Great Adventure", author_id: 101, price: 24.99, stock: 35, publication_year: 2018 },
+                    { book_id: 2, title: "Mystery in the Mountains", author_id: 102, price: 19.95, stock: 42, publication_year: 2020 },
+                    { book_id: 3, title: "Coding for Beginners", author_id: 103, price: 34.50, stock: 18, publication_year: 2022 },
+                    { book_id: 4, title: "History of Art", author_id: 104, price: 49.99, stock: 7, publication_year: 2019 },
+                    { book_id: 5, title: "Cooking Essentials", author_id: 105, price: 29.99, stock: 53, publication_year: 2021 },
+                    { book_id: 6, title: "Poetry Collection", author_id: 101, price: 15.75, stock: 21, publication_year: 2017 },
+                    { book_id: 7, title: "Science Explained", author_id: 106, price: 27.50, stock: 0, publication_year: 2023 },
+                    { book_id: 8, title: "Business Strategy", author_id: 107, price: 39.99, stock: 12, publication_year: 2022 },
+                    { book_id: 9, title: "Travel Guide: Europe", author_id: 108, price: 22.95, stock: 39, publication_year: 2020 },
+                    { book_id: 10, title: "Philosophy Basics", author_id: 109, price: 18.50, stock: 15, publication_year: 2018 }
+                ],
+                authors: [
+                    { author_id: 101, name: "Jane Smith", nationality: "American", books_written: 12 },
+                    { author_id: 102, name: "Robert Johnson", nationality: "British", books_written: 8 },
+                    { author_id: 103, name: "Maria Garcia", nationality: "Spanish", books_written: 5 },
+                    { author_id: 104, name: "Ahmed Hassan", nationality: "Egyptian", books_written: 3 },
+                    { author_id: 105, name: "Yuki Tanaka", nationality: "Japanese", books_written: 7 },
+                    { author_id: 107, name: "David Chen", nationality: "Canadian", books_written: 4 },
+                    { author_id: 110, name: "Elena Popov", nationality: "Russian", books_written: 6 }
+                ],
+                orders: [
+                    { order_id: 1001, book_id: 3, customer_id: 5001, quantity: 1, order_date: "2023-03-15", shipped: true },
+                    { order_id: 1002, book_id: 5, customer_id: 5002, quantity: 2, order_date: "2023-03-16", shipped: true },
+                    { order_id: 1003, book_id: 2, customer_id: 5003, quantity: 1, order_date: "2023-03-18", shipped: true },
+                    { order_id: 1004, book_id: 1, customer_id: 5001, quantity: 1, order_date: "2023-03-20", shipped: true },
+                    { order_id: 1005, book_id: 7, customer_id: 5004, quantity: 2, order_date: "2023-03-22", shipped: false },
+                    { order_id: 1006, book_id: 10, customer_id: 5002, quantity: 1, order_date: "2023-03-25", shipped: true },
+                    { order_id: 1007, book_id: 6, customer_id: 5005, quantity: 3, order_date: "2023-03-27", shipped: true },
+                    { order_id: 1008, book_id: 9, customer_id: 5006, quantity: 1, order_date: "2023-03-29", shipped: false },
+                    { order_id: 1009, book_id: 4, customer_id: 5007, quantity: 1, order_date: "2023-04-02", shipped: true },
+                    { order_id: 1010, book_id: 8, customer_id: 5003, quantity: 2, order_date: "2023-04-05", shipped: false }
+                ]
+            };
+            
+            const queryBoxes = document.querySelectorAll('.query-box');
+            const dropdowns = document.querySelectorAll('.dropdown');
+            const queryPreview = document.querySelector('.query-preview');
+            const resultsTable = document.querySelector('.results-table');
+            
+            function updateQueryPreview() {
+                // Get values from all components
+                const queryType = document.querySelector('.query-component:nth-child(1) .query-box').textContent;
+                
+                // Get SELECT columns
+                const selectBox = document.querySelector('.query-component:nth-child(2) .query-box');
+                const selectedItems = Array.from(selectBox.querySelectorAll('.selected-item')).map(item => {
+                    return item.textContent.replace('×', '').trim();
+                });
+                const selectClause = selectedItems.length > 0 ? selectedItems.join(', ') : '*';
+                
+                // Get FROM table
+                const fromTable = document.querySelector('.query-component:nth-child(3) .query-box').textContent;
+                
+                // Get JOIN clause
+                const joinClause = document.querySelector('.query-component:nth-child(4) .query-box').textContent;
+                
+                // Get WHERE clause
+                const whereClause = document.querySelector('.query-component:nth-child(5) .query-box').textContent;
+                
+                // Get ORDER BY clause
+                const orderByClause = document.querySelector('.query-component:nth-child(6) .query-box').textContent;
+                
+                // Build and format the SQL query
+                let query = `<span class="keyword">SELECT</span> <span class="identifier">${selectClause}</span>`;
+                query += `\n<span class="keyword">FROM</span> <span class="identifier">${fromTable}</span>`;
+                
+                if (joinClause && joinClause !== 'Click to add JOIN') {
+                    query += `\n<span class="keyword">${joinClause}</span>`;
+                }
+                
+                if (whereClause && whereClause !== 'Click to add conditions') {
+                    query += `\n<span class="keyword">WHERE</span> ${formatWhereClause(whereClause)}`;
+                }
+                
+                if (orderByClause && orderByClause !== 'Click to add ORDER BY') {
+                    query += `\n<span class="keyword">ORDER BY</span> ${formatOrderByClause(orderByClause)}`;
+                }
+                
+                queryPreview.innerHTML = query;
+            }
+            
+            function formatWhereClause(clause) {
+                return clause.replace(/([<>=!]+)/g, '<span class="operator">$1</span>')
+                             .replace(/\b(AND|OR)\b/g, '<span class="keyword">$1</span>')
+                             .replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?![\s\S]*<\/span>)/g, '<span class="identifier">$1</span>');
+            }
+            
+            function formatOrderByClause(clause) {
+                return clause.replace(/\b(ASC|DESC)\b/g, '<span class="keyword">$1</span>')
+                             .replace(/\b([a-zA-Z_][a-zA-Z0-9_]*)\b(?![\s\S]*<\/span>)/g, '<span class="identifier">$1</span>');
+            }
+            
+            // Toggle dropdowns when clicking on query boxes
+            queryBoxes.forEach((box, index) => {
+                box.addEventListener('click', function() {
+                    // Close all other dropdowns
+                    dropdowns.forEach((dropdown, i) => {
+                        if (i !== index) {
+                            dropdown.classList.remove('show');
+                            queryBoxes[i].classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    dropdowns[index].classList.toggle('show');
+                    box.classList.toggle('active');
+                });
+            });
+            
+            // Close dropdowns when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('.query-component')) {
+                    dropdowns.forEach(dropdown => dropdown.classList.remove('show'));
+                    queryBoxes.forEach(box => box.classList.remove('active'));
+                }
+            });
+            
+            // Handling dropdown item selection
+            document.querySelectorAll('.dropdown-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const component = this.closest('.query-component');
+                    const queryBox = component.querySelector('.query-box');
+                    const dropdown = component.querySelector('.dropdown');
+                    
+                    // For SELECT component, add as a selected item
+                    if (component.querySelector('.component-label').textContent === 'SELECT:') {
+                        const selectedItem = document.createElement('span');
+                        selectedItem.className = 'selected-item';
+                        selectedItem.innerHTML = this.textContent + ' <span class="remove-item">×</span>';
+                        queryBox.insertBefore(selectedItem, null);
+                        
+                        // Add event listener to remove item
+                        selectedItem.querySelector('.remove-item').addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            selectedItem.remove();
+                            updateQueryPreview();
+                        });
+                    } else {
+                        // For other components, replace text
+                        queryBox.textContent = this.textContent;
+                    }
+                    
+                    dropdown.classList.remove('show');
+                    queryBox.classList.remove('active');
+                    updateQueryPreview();
+                });
+            });
+            
+            // Execute the SQL query
+            function executeQuery() {
+                try {
+                    // Get the components of the query
+                    const fromTable = document.querySelector('.query-component:nth-child(3) .query-box').textContent.trim();
+                    
+                    // Get selected columns
+                    const selectBox = document.querySelector('.query-component:nth-child(2) .query-box');
+                    const selectedCols = Array.from(selectBox.querySelectorAll('.selected-item')).map(item => {
+                        return item.textContent.replace('×', '').trim();
+                    });
+                    
+                    // Get WHERE conditions
+                    const whereBox = document.querySelector('.query-component:nth-child(5) .query-box');
+                    const whereCondition = whereBox.textContent.trim();
+                    
+                    // Execute simple query on our mock database
+                    let results = [...database[fromTable]]; // Clone array
+                    
+                    // Apply WHERE clause filtering (simplified for demo)
+                    if (whereCondition && whereCondition !== 'Click to add conditions') {
+                        // This is a simple parser for demo purposes
+                        // Real implementation would need a proper SQL parser
+                        if (whereCondition.includes('price < 30')) {
+                            results = results.filter(item => item.price < 30);
+                        }
+                        
+                        if (whereCondition.includes('publication_year > 2020')) {
+                            results = results.filter(item => item.publication_year > 2020);
+                        }
+                    }
+                    
+                    // Apply JOIN (simplified - only for INNER JOIN authors)
+                    const joinClause = document.querySelector('.query-component:nth-child(4) .query-box').textContent;
+                    if (joinClause.includes('INNER JOIN authors')) {
+                        results = results.map(book => {
+                            const author = database.authors.find(a => a.author_id === book.author_id);
+                            return { ...book, author_name: author ? author.name : null, nationality: author ? author.nationality : null };
+                        }).filter(item => item.author_name !== null); // Inner join removes nulls
+                    }
+                    
+                    // Apply ORDER BY
+                    const orderByClause = document.querySelector('.query-component:nth-child(6) .query-box').textContent;
+                    if (orderByClause.includes('price DESC')) {
+                        results.sort((a, b) => b.price - a.price);
+                    }
+                    
+                    // Select only requested columns (or all if none specified)
+                    let finalResults = results;
+                    if (selectedCols.length > 0) {
+                        finalResults = results.map(item => {
+                            const newItem = {};
+                            selectedCols.forEach(col => {
+                                newItem[col] = item[col];
+                            });
+                            return newItem;
+                        });
+                    }
+                    
+                    // Update results table
+                    updateResultsTable(finalResults);
+                    
+                    return finalResults;
+                } catch (error) {
+                    console.error('Error executing query:', error);
+                    return [];
+                }
+            }
+            
+            // Update the results table with query results
+            function updateResultsTable(results) {
+                if (!results || results.length === 0) {
+                    resultsTable.innerHTML = '<thead><tr><th>No results found</th></tr></thead>';
+                    return;
+                }
+                
+                // Create table header
+                const columns = Object.keys(results[0]);
+                let headerHTML = '<thead><tr>';
+                columns.forEach(col => {
+                    headerHTML += `<th>${col}</th>`;
+                });
+                headerHTML += '</tr></thead>';
+                
+                // Create table body
+                let bodyHTML = '<tbody>';
+                results.forEach(row => {
+                    bodyHTML += '<tr>';
+                    columns.forEach(col => {
+                        bodyHTML += `<td>${row[col]}</td>`;
+                    });
+                    bodyHTML += '</tr>';
+                });
+                bodyHTML += '</tbody>';
+                
+                // Update table
+                resultsTable.innerHTML = headerHTML + bodyHTML;
+            }
+            
+            // Run query when button is clicked
+            document.querySelector('.run-button').addEventListener('click', function() {
+                const results = executeQuery();
+                console.log('Query executed with results:', results);
+            });
+            
+            // Initialize query preview
+            updateQueryPreview();
+        });
+    </script>
+</body>
+</html>

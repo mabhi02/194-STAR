@@ -339,19 +339,6 @@
         .toast {
             min-width: 250px;
         }
-
-        /* Added for better drag and drop experience */
-        .dropped {
-            margin-bottom: 5px;
-            position: relative;
-            padding-right: 40px;
-        }
-
-        .dropped button {
-            position: absolute;
-            right: 5px;
-            top: 5px;
-        }
     </style>
 </head>
 <body>
@@ -462,12 +449,10 @@
             class SQLQuizApp {
                 constructor(db) {
                     this.db = db;
-                    this.questions = [];
-                    this.questionOrder = []; // To store randomized question order
                     this.currentQuestionIndex = 0;
+                    this.questions = [];
                     this.userAnswers = [];
                     this.score = 0;
-                    this.answeredQuestions = new Set(); // Track which questions have been answered
                     
                     // DOM elements
                     this.questionTitle = document.querySelector('.question-title');
@@ -498,9 +483,6 @@
                     // Load questions
                     this.setupQuestions();
                     
-                    // Randomize questions
-                    this.randomizeQuestions();
-                    
                     // Display schema
                     this.displayDatabaseSchema();
                     
@@ -512,23 +494,6 @@
                     
                     // Update progress bar
                     this.updateProgress();
-                }
-
-                randomizeQuestions() {
-                    // Create an array of indices and shuffle it
-                    this.questionOrder = [...Array(this.questions.length).keys()];
-                    this.shuffleArray(this.questionOrder);
-                    
-                    // Initialize user answers array based on randomized order
-                    this.userAnswers = new Array(this.questions.length).fill(null);
-                }
-                
-                // Fisher-Yates shuffle algorithm
-                shuffleArray(array) {
-                    for (let i = array.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [array[i], array[j]] = [array[j], array[i]];
-                    }
                 }
                 
                 setupDatabase() {
@@ -872,6 +837,9 @@
                             explanation: "In SQL, pivot tables are often created using CASE expressions with aggregate functions. This transforms row values into columns."
                         }
                     ];
+                    
+                    // Initialize user answers array
+                    this.userAnswers = new Array(this.questions.length).fill(null);
                 }
                 
                 displayDatabaseSchema() {
@@ -987,7 +955,7 @@
                             const content = header.nextElementSibling;
                             content.classList.toggle('active');
                             
-                            const icon = header.querySelector('.fas.fa-chevron-down, .fas.fa-chevron-up');
+                            const icon = header.querySelector('.fas.fa-chevron-down');
                             icon.classList.toggle('fa-chevron-down');
                             icon.classList.toggle('fa-chevron-up');
                         });
@@ -1035,14 +1003,7 @@
                 displayQuestion() {
                     if (this.questions.length === 0) return;
                     
-                    // Clear any previous feedback
-                    const feedback = document.querySelector('.feedback');
-                    if (feedback) feedback.remove();
-                    
-                    // Get the current question based on randomized order
-                    const questionIndex = this.questionOrder[this.currentQuestionIndex];
-                    const question = this.questions[questionIndex];
-                    
+                    const question = this.questions[this.currentQuestionIndex];
                     this.questionTitle.textContent = question.title;
                     this.questionCounter.textContent = `${this.currentQuestionIndex + 1}/${this.questions.length}`;
                     
@@ -1070,19 +1031,6 @@
                     
                     this.questionContent.innerHTML = html;
                     
-                    // Reset the check answer button
-                    this.checkAnswerBtn.disabled = false;
-                    
-                    // Clear previous results
-                    if (!this.answeredQuestions.has(this.currentQuestionIndex)) {
-                        this.resultsContent.innerHTML = `
-                            <div class="alert alert-info">
-                                Results will appear here after you run a query.
-                            </div>
-                        `;
-                        this.chartContainer.innerHTML = '';
-                    }
-                    
                     // Add event handlers based on question type
                     switch (question.type) {
                         case 'multiple-choice':
@@ -1102,11 +1050,6 @@
                     // Restore previous answer if exists
                     if (this.userAnswers[this.currentQuestionIndex] !== null) {
                         this.restorePreviousAnswer();
-                        
-                        // If this question was already answered, disable the check button
-                        if (this.answeredQuestions.has(this.currentQuestionIndex)) {
-                            this.checkAnswerBtn.disabled = true;
-                        }
                     }
                     
                     // Update button states
@@ -1281,7 +1224,7 @@
                             
                             // Add a remove button
                             const removeBtn = document.createElement('button');
-                            removeBtn.className = 'btn btn-sm btn-danger';
+                            removeBtn.className = 'btn btn-sm btn-danger float-end';
                             removeBtn.innerHTML = '<i class="fas fa-times"></i>';
                             removeBtn.addEventListener('click', () => {
                                 clone.remove();
@@ -1341,8 +1284,7 @@
                 
                 restorePreviousAnswer() {
                     const answer = this.userAnswers[this.currentQuestionIndex];
-                    const questionIndex = this.questionOrder[this.currentQuestionIndex];
-                    const question = this.questions[questionIndex];
+                    const question = this.questions[this.currentQuestionIndex];
                     
                     if (answer === null) return;
                     
@@ -1352,18 +1294,14 @@
                             break;
                             
                         case 'drag-drop':
-                            // For simplicity, we'll just display the feedback for drag-drop
-                            // Full restoration would be more complex
-                            if (this.answeredQuestions.has(this.currentQuestionIndex)) {
-                                this.showDragDropFeedback(question, answer);
-                            }
+                            // Restore drag and drop state
+                            // This is complex and would need more code to fully implement
                             break;
                             
                         case 'fill-in-blanks':
                             // Restore dropdown selections
                             for (const [blank, value] of Object.entries(answer)) {
-                                const dropdown = document.querySelector(`select[data-blank="${blank}"]`);
-                                if (dropdown) dropdown.value = value;
+                                document.querySelector(`select[data-blank="${blank}"]`).value = value;
                             }
                             break;
                             
@@ -1371,44 +1309,11 @@
                             // Restore dropdown selections
                             for (let i = 0; i < answer.length; i++) {
                                 if (answer[i] !== undefined) {
-                                    const dropdown = document.querySelector(`select[data-index="${i}"]`);
-                                    if (dropdown) dropdown.value = answer[i];
+                                    document.querySelector(`select[data-index="${i}"]`).value = answer[i];
                                 }
                             }
                             break;
                     }
-                }
-                
-                showDragDropFeedback(question, userAnswer) {
-                    // This is a simplified approach to show feedback for drag-drop questions
-                    // when restoring a previously answered question
-                    let correctQuery = question.segments.join(' ');
-                    let userQuery = userAnswer.map(index => question.segments[index]).join(' ');
-                    let isCorrect = JSON.stringify(userAnswer) === JSON.stringify(question.correctOrder);
-                    
-                    let feedbackHtml = `
-                        <div class="feedback ${isCorrect ? 'correct' : 'incorrect'}">
-                            <h5><i class="fas ${isCorrect ? 'fa-check-circle' : 'fa-times-circle'} me-2"></i>${isCorrect ? 'Correct!' : 'Incorrect'}</h5>
-                            <p>${question.explanation}</p>
-                            <div class="mt-3">
-                                <strong>Correct query:</strong>
-                                <div class="sql-snippet">${correctQuery}</div>
-                            </div>
-                    `;
-                    
-                    if (!isCorrect) {
-                        feedbackHtml += `
-                            <div class="mt-3">
-                                <strong>Your query:</strong>
-                                <div class="sql-snippet">${userQuery}</div>
-                            </div>
-                        `;
-                    }
-                    
-                    feedbackHtml += `</div>`;
-                    
-                    // Add feedback to the question content
-                    this.questionContent.innerHTML += feedbackHtml;
                 }
                 
                 navigateQuestion(direction) {
@@ -1451,17 +1356,13 @@
                 }
                 
                 checkAnswer() {
-                    const questionIndex = this.questionOrder[this.currentQuestionIndex];
-                    const question = this.questions[questionIndex];
+                    const question = this.questions[this.currentQuestionIndex];
                     const userAnswer = this.userAnswers[this.currentQuestionIndex];
                     
                     if (userAnswer === null) {
                         showToast('Please provide an answer before checking', 'warning');
                         return;
                     }
-                    
-                    // Add this question to answered set
-                    this.answeredQuestions.add(this.currentQuestionIndex);
                     
                     let isCorrect = false;
                     let correctQuery = '';
@@ -1502,6 +1403,7 @@
                                 correctQueryParts = correctQueryParts.replace(`[${blank}]`, value);
                             }
                             correctQuery = correctQueryParts;
+                            
                             // Construct the user query
                             let userQueryParts = question.template;
                             for (const [blank, value] of Object.entries(userAnswer)) {
@@ -1560,11 +1462,6 @@
                     
                     // Disable check button after showing answer
                     this.checkAnswerBtn.disabled = true;
-                    
-                    // Update score if correct
-                    if (isCorrect) {
-                        this.score++;
-                    }
                 }
                 
                 executeQueryAndDisplay(query) {
@@ -1579,8 +1476,6 @@
                                     Query executed successfully. No results returned.
                                 </div>
                             `;
-                            // Clear any existing chart
-                            this.chartContainer.innerHTML = '';
                             return;
                         }
                         
@@ -1611,7 +1506,7 @@
                         values.forEach(row => {
                             tableHtml += '<tr>';
                             row.forEach(cell => {
-                                tableHtml += `<td>${cell !== null ? cell : 'NULL'}</td>`;
+                                tableHtml += `<td>${cell}</td>`;
                             });
                             tableHtml += '</tr>';
                         });
@@ -1636,8 +1531,6 @@
                                 Error executing query: ${error.message}
                             </div>
                         `;
-                        // Clear any existing chart
-                        this.chartContainer.innerHTML = '';
                     }
                 }
                 
@@ -1681,8 +1574,7 @@
                         
                         // If we have a date/time column and a numeric column, a line chart might be good
                         if (columns.find(col => values.some(row => row[columns.indexOf(col)]?.toString().match(/^\d{4}-\d{2}-\d{2}/))) &&
-                            columns.find(col => values.every(row => typeof row[columns.indexOf(col)] === 'number' || 
-                                           (!isNaN(parseFloat(row[columns.indexOf(col)])) && row[columns.indexOf(col)] !== null)))) {
+                            columns.find(col => values.every(row => typeof row[columns.indexOf(col)] === 'number'))) {
                             possibleChartTypes.push('line');
                         }
                         
@@ -1710,9 +1602,7 @@
                             
                             // Find a suitable data column (must be numeric)
                             for (let i = 0; i < columns.length; i++) {
-                                if (i !== labelColumn && values.every(row => 
-                                    typeof row[i] === 'number' || 
-                                    (!isNaN(parseFloat(row[i])) && row[i] !== null))) {
+                                if (i !== labelColumn && values.every(row => typeof row[i] === 'number' || !isNaN(parseFloat(row[i])))) {
                                     dataColumn = i;
                                     break;
                                 }
@@ -1768,14 +1658,12 @@
                 resetQuiz() {
                     // Confirm reset
                     if (confirm('Are you sure you want to reset the quiz? Your progress will be lost.')) {
-                        // Re-randomize questions
-                        this.randomizeQuestions();
-                        
-                        // Reset current state
                         this.currentQuestionIndex = 0;
+                        this.userAnswers = new Array(this.questions.length).fill(null);
                         this.score = 0;
-                        this.answeredQuestions = new Set();
                         this.checkAnswerBtn.disabled = false;
+                        this.displayQuestion();
+                        this.updateProgress();
                         
                         // Clear results
                         this.resultsContent.innerHTML = `
@@ -1787,13 +1675,7 @@
                         // Clear chart
                         this.chartContainer.innerHTML = '';
                         
-                        // Display first question
-                        this.displayQuestion();
-                        
-                        // Update progress bar
-                        this.updateProgress();
-                        
-                        showToast('Quiz has been reset with new questions', 'success');
+                        showToast('Quiz has been reset', 'success');
                     }
                 }
             }
@@ -1826,24 +1708,17 @@
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => {
-                    if (toastContainer.contains(toast)) {
-                        toastContainer.removeChild(toast);
-                    }
+                    toastContainer.removeChild(toast);
                 }, 500);
             }, 5000);
             
             // Close button functionality
-            const closeBtn = toast.querySelector('.btn-close');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => {
-                    toast.classList.remove('show');
-                    setTimeout(() => {
-                        if (toastContainer.contains(toast)) {
-                            toastContainer.removeChild(toast);
-                        }
-                    }, 500);
-                });
-            }
+            toast.querySelector('.btn-close').addEventListener('click', () => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toastContainer.removeChild(toast);
+                }, 500);
+            });
         }
     </script>
 </body>
