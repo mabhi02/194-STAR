@@ -1,5 +1,7 @@
 document.addEventListener("DOMContentLoaded", function() {
 
+  showAlert = false;
+
   // --- Utility Functions ---
   function shuffleArray(array) {
     for (let i = array.length - 1; i > 0; i--) {
@@ -106,7 +108,7 @@ document.addEventListener("DOMContentLoaded", function() {
   // Sample questions array with options that include sampleTable property
   const questions = [
     {
-      question: "Pivot Query: Count orders by status.",
+      question: "Pre-test: Count orders by status.",
       // Options are objects with text and the corresponding sampleTable key.
       options: [
         {
@@ -129,7 +131,7 @@ document.addEventListener("DOMContentLoaded", function() {
       correctIndex: 0
     },
     {
-      question: "Simple Selection: List customers from USA.",
+      question: "Pre-test: List customers from USA.",
       options: [
         {
           text: "SELECT * FROM customers WHERE country = 'USA';",
@@ -382,6 +384,7 @@ document.addEventListener("DOMContentLoaded", function() {
    * 5) SIMPLE TOAST UTILITY
    ****************************************************************/
   function showToast(message, type = "info") {
+    if (!showAlert) return;
     alert(`[${type.toUpperCase()}] ${message}`);
   }
 });
