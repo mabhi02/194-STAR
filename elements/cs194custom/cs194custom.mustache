@@ -1,145 +1,203 @@
-<style>
-        .mainz {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(to right, #4facfe, #00f2fe);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            flex-direction: column;
-        }
-        table {
-            width: 60%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 18px;
-            text-align: left;
-            background: white;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: center;
-        }
-        th {
-            background-color: #007acc;
-            color: white;
-        }
-        .dropzone {
-            width: 100%;
-            height: 40px;
-            border: 2px dashed #007acc;
-            background-color: white;
-            text-align: center;
-            line-height: 40px;
-            color: gray;
-            cursor: pointer;
-        }
-        .drag-item {
-            padding: 5px 10px;
-            background-color: #007acc;
-            color: white;
-            border-radius: 5px;
-            cursor: grab;
-            display: inline-block;
-            margin: 5px;
-        }
-        .correct {
-            background-color: lightgreen;
-        }
-        .wrong {
-            background-color: lightcoral;
-        }
-    </style>
-    <script>
-        function allowDrop(event) {
-            event.preventDefault();
-        }
-        
-        function drag(event) {
-            event.dataTransfer.setData("text", event.target.innerText);
-        }
-        
-        function drop(event, correctValue) {
-            event.preventDefault();
-            const data = event.dataTransfer.getData("text");
-            event.target.innerText = data;
-            
-            if (data === correctValue) {
-                event.target.classList.add('correct');
-                event.target.classList.remove('wrong');
-            } else {
-                event.target.classList.add('wrong');
-                event.target.classList.remove('correct');
-            }
-        }
-    </script>
-<div class="mainz">
-    <h2 style="color: white;">Boat Schedule Table</h2>
-    <div>
-        <span class="drag-item" draggable="true" ondragstart="drag(event)">Freshwater</span>
-        <span class="drag-item" draggable="true" ondragstart="drag(event)">Saltwater</span>
+<div class="body-wrapper">
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#">
+        <i class="fas fa-database me-2"></i>SQL Learning Quiz
+      </a>
+      <div class="d-flex">
+        <button id="reset-quiz" class="btn btn-outline-light btn-sm me-2">
+          <i class="fas fa-redo me-1"></i>Reset Quiz
+        </button>
+        <button id="toggle-builder" class="btn btn-outline-light btn-sm">
+          <i class="fas fa-tools me-1"></i>Query Builder
+        </button>
+      </div>
     </div>
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Color</th>
-            <th>Date Accessed</th>
-        </tr>
-        <tr>
-            <td>1</td>
-            <td>Paddle</td>
-            <td class="dropzone" ondrop="drop(event, 'Freshwater')" ondragover="allowDrop(event)">--Selection--</td>
-            <td>Red</td>
-            <td>12-01-2021</td>
-        </tr>
-        <tr>
-            <td>2</td>
-            <td>Ole Reliable</td>
-            <td class="dropzone" ondrop="drop(event, 'Saltwater')" ondragover="allowDrop(event)">--Selection--</td>
-            <td>Green</td>
-            <td>12-01-2021</td>
-        </tr>
-        <tr>
-            <td>3</td>
-            <td>Shells</td>
-            <td class="dropzone" ondrop="drop(event, 'Freshwater')" ondragover="allowDrop(event)">--Selection--</td>
-            <td>Green</td>
-            <td>12-02-2021</td>
-        </tr>
-        <tr>
-            <td>4</td>
-            <td>Narwhal</td>
-            <td class="dropzone" ondrop="drop(event, 'Saltwater')" ondragover="allowDrop(event)">--Selection--</td>
-            <td>Red</td>
-            <td>12-04-2021</td>
-        </tr>
-        <tr>
-            <td>5</td>
-            <td>Caribbean</td>
-            <td class="dropzone" ondrop="drop(event, 'Saltwater')" ondragover="allowDrop(event)">--Selection--</td>
-            <td>Yellow</td>
-            <td>12-05-2021</td>
-        </tr>
-        <tr>
-            <td>6</td>
-            <td>Delta</td>
-            <td class="dropzone" ondrop="drop(event, 'Freshwater')" ondragover="allowDrop(event)">--Selection--</td>
-            <td>Blue</td>
-            <td>12-05-2021</td>
-        </tr>
-        <tr>
-            <td>7</td>
-            <td>Nets</td>
-            <td class="dropzone" ondrop="drop(event, 'Saltwater')" ondragover="allowDrop(event)">--Selection--</td>
-            <td>Orange</td>
-            <td>12-07-2021</td>
-        </tr>
-    </table>
+  </nav>
 
+  <div class="container mt-4">
+    <!-- SQL Query Builder Section -->
+    <div id="sql-builder-section" class="sql-builder-container" style="display: none;">
+      <h4 class="mb-3"><i class="fas fa-tools me-2"></i>SQL Query Builder</h4>
+
+      <ul class="nav nav-tabs" id="builder-tabs">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#select-content">SELECT</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#join-content">JOIN</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#where-content">WHERE</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#order-content">ORDER BY</a></li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane fade show active" id="select-content">
+          <div class="builder-section">
+            <label>Select Table:</label>
+            <select id="select-table" class="form-select"></select>
+          </div>
+          <div class="builder-section">
+            <label>Select Columns:</label>
+            <div id="select-columns" class="builder-columns"></div>
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="join-content">
+          <div class="builder-section">
+            <label>Join Type:</label>
+            <select id="join-type" class="form-select">
+              <option value="INNER JOIN">INNER JOIN</option>
+              <option value="LEFT JOIN">LEFT JOIN</option>
+              <option value="RIGHT JOIN">RIGHT JOIN</option>
+              <option value="FULL JOIN">FULL JOIN</option>
+            </select>
+          </div>
+          <div class="builder-section">
+            <label>Join Table:</label>
+            <select id="join-table" class="form-select"></select>
+          </div>
+          <div class="builder-section">
+            <label>ON Condition:</label>
+            <input type="text" id="join-condition" class="form-control" placeholder="e.g., table1.id = table2.table1_id" />
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="where-content">
+          <div class="builder-section">
+            <label>Where Condition:</label>
+            <input type="text" id="where-condition" class="form-control" placeholder="e.g., column > 100" />
+          </div>
+        </div>
+
+        <div class="tab-pane fade" id="order-content">
+          <div class="builder-section">
+            <label>Order By:</label>
+            <input type="text" id="order-column" class="form-control" placeholder="e.g., column_name" />
+          </div>
+          <div class="builder-section">
+            <select id="order-direction" class="form-select">
+              <option value="ASC">Ascending (ASC)</option>
+              <option value="DESC">Descending (DESC)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="sql-preview mt-3" id="sql-preview">SELECT * FROM table</div>
+      <div class="d-flex justify-content-between mt-3">
+        <button id="reset-builder" class="btn btn-secondary">
+          <i class="fas fa-undo me-1"></i>Reset
+        </button>
+        <button id="run-builder-query" class="btn btn-success">
+          <i class="fas fa-play me-1"></i>Run Query
+        </button>
+      </div>
+    </div>
+
+    <!-- Quiz Section -->
+    <div class="row mt-4">
+      <div class="col-md-8">
+        <!-- Progress bar -->
+        <div class="progress mb-3">
+          <div id="progress-bar" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+        </div>
+
+        <!-- Single Question area (multiple-choice) -->
+        <div class="quiz-area">
+          <div class="question-header mb-3">
+            <h4 class="question-title">Order Status Pivot</h4>
+            <span class="question-counter">1/1</span>
+          </div>
+          <div id="question-content">
+            <p class="mb-3">
+              Create a pivot table showing the count of orders by status (Pending, Processing, Shipped, Delivered).
+            </p>
+            <div class="multiple-choice">
+              <div class="choice-option" data-index="0">
+                <div class="sql-snippet">
+                  SELECT COUNT(CASE WHEN status = 'Pending' THEN 1 END) as Pending,
+                  COUNT(CASE WHEN status = 'Processing' THEN 1 END) as Processing,
+                  COUNT(CASE WHEN status = 'Shipped' THEN 1 END) as Shipped,
+                  COUNT(CASE WHEN status = 'Delivered' THEN 1 END) as Delivered
+                  FROM orders;
+                </div>
+              </div>
+              <div class="choice-option" data-index="1">
+                <div class="sql-snippet">
+                  SELECT status, COUNT(*) FROM orders GROUP BY status;
+                </div>
+              </div>
+              <div class="choice-option" data-index="2">
+                <div class="sql-snippet">
+                  SELECT PIVOT(COUNT(*) FOR status IN ('Pending','Processing','Shipped','Delivered')) FROM orders;
+                </div>
+              </div>
+              <div class="choice-option" data-index="3">
+                <div class="sql-snippet">
+                  SELECT * FROM orders PIVOT(COUNT(*) FOR status IN (Pending,Processing,Shipped,Delivered));
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex justify-content-between mt-4">
+            <button id="prev-btn" class="btn btn-secondary" disabled>
+              <i class="fas fa-arrow-left me-1"></i>Previous
+            </button>
+            <button id="check-answer-btn" class="btn btn-primary">
+              Check Answer<i class="fas fa-check ms-1"></i>
+            </button>
+            <button id="next-btn" class="btn btn-primary" disabled>
+              Next<i class="fas fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Results area -->
+        <div class="results-area mt-4">
+          <h4><i class="fas fa-chart-bar me-2"></i>Results</h4>
+          <div id="results-content">
+            <div class="alert alert-info">Results will appear here after you run a query.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schema Sidebar -->
+      <div class="col-md-4">
+        <div class="db-schema">
+          <h4 class="mb-3"><i class="fas fa-table me-2"></i>Database Schema</h4>
+          <div id="schema-tables">
+            <!-- Minimal sample schema (hardcoded for demonstration) -->
+            <div class="schema-table">
+              <div class="schema-table-header">orders</div>
+              <div class="schema-table-content active">
+                <table class="table table-sm">
+                  <thead>
+                    <tr><th>Column</th><th>Type</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>order_id</td><td>INTEGER</td></tr>
+                    <tr><td>customer_id</td><td>INTEGER</td></tr>
+                    <tr><td>order_date</td><td>DATE</td></tr>
+                    <tr><td>total_amount</td><td>REAL</td></tr>
+                    <tr><td>status</td><td>TEXT</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <div class="db-visualization mt-4">
+            <h5 class="mb-2">Table Relationships</h5>
+            <div class="table-relation-diagram">
+              <p>(Diagram here)</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;"></div>
 </div>
+
+<!-- Load your JS at the end -->
+<script src="{{client_files_element_url}}/cs194custom.js"></script>
