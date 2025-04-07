@@ -1,0 +1,318 @@
+{{#question}}
+<div id="pl-sql-quiz-{{uuid}}" class="pl-sql-quiz-container">
+    <!-- Hidden input for answer submission -->
+    <input id="pl-sql-quiz-input-{{uuid}}" name="{{answers_name}}" type="hidden">
+    
+    <!-- Progress Bar -->
+    <div class="progress mb-3">
+        <div id="pl-sql-quiz-progress-{{uuid}}" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
+    </div>
+    
+    <!-- Quiz Area -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 id="pl-sql-quiz-title-{{uuid}}" class="card-title mb-0">{{title}}</h5>
+            <span id="pl-sql-quiz-counter-{{uuid}}" class="badge bg-primary">0/0</span>
+        </div>
+        <div class="card-body">
+            <div id="pl-sql-quiz-content-{{uuid}}">
+                <!-- Question content will be loaded here -->
+                <div class="alert alert-info">Loading questions...</div>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-4">
+                <button id="pl-sql-quiz-prev-{{uuid}}" class="btn btn-secondary" disabled>
+                    <i class="fa fa-arrow-left"></i> Previous
+                </button>
+                <button id="pl-sql-quiz-check-{{uuid}}" class="btn btn-primary">
+                    Check Answer <i class="fa fa-check"></i>
+                </button>
+                <button id="pl-sql-quiz-next-{{uuid}}" class="btn btn-primary" disabled>
+                    Next <i class="fa fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- SQL Query Builder (optional) -->
+    {{#show_builder}}
+    <div id="pl-sql-builder-{{uuid}}" class="card mb-4" style="display: none;">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fa fa-tools me-2"></i>SQL Query Builder
+            </h5>
+            <button id="pl-sql-builder-toggle-{{uuid}}" class="btn btn-sm btn-outline-primary">
+                <i class="fa fa-minus"></i>
+            </button>
+        </div>
+        <div id="pl-sql-builder-content-{{uuid}}" class="card-body">
+            <ul class="nav nav-tabs" id="pl-sql-builder-tabs-{{uuid}}" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="pl-sql-select-tab-{{uuid}}" data-bs-toggle="tab" data-bs-target="#pl-sql-select-{{uuid}}" type="button" role="tab">SELECT</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pl-sql-join-tab-{{uuid}}" data-bs-toggle="tab" data-bs-target="#pl-sql-join-{{uuid}}" type="button" role="tab">JOIN</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pl-sql-where-tab-{{uuid}}" data-bs-toggle="tab" data-bs-target="#pl-sql-where-{{uuid}}" type="button" role="tab">WHERE</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pl-sql-order-tab-{{uuid}}" data-bs-toggle="tab" data-bs-target="#pl-sql-order-{{uuid}}" type="button" role="tab">ORDER BY</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content pt-3" id="pl-sql-builder-tab-content-{{uuid}}">
+                <!-- SELECT Tab -->
+                <div class="tab-pane fade show active" id="pl-sql-select-{{uuid}}" role="tabpanel">
+                    <div class="mb-3">
+                        <label class="form-label">Select Table:</label>
+                        <select id="pl-sql-select-table-{{uuid}}" class="form-select">
+                            <option value="">-- Select a table --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Select Columns:</label>
+                        <div id="pl-sql-select-columns-{{uuid}}" class="d-flex flex-wrap gap-2 p-2 border rounded">
+                            <!-- Columns will be populated based on selected table -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- JOIN Tab -->
+                <div class="tab-pane fade" id="pl-sql-join-{{uuid}}" role="tabpanel">
+                    <div class="mb-3">
+                        <label class="form-label">Join Type:</label>
+                        <select id="pl-sql-join-type-{{uuid}}" class="form-select">
+                            <option value="INNER JOIN">INNER JOIN</option>
+                            <option value="LEFT JOIN">LEFT JOIN</option>
+                            <option value="RIGHT JOIN">RIGHT JOIN</option>
+                            <option value="FULL JOIN">FULL JOIN</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Join Table:</label>
+                        <select id="pl-sql-join-table-{{uuid}}" class="form-select">
+                            <option value="">-- Select a table --</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">ON Condition:</label>
+                        <input type="text" id="pl-sql-join-condition-{{uuid}}" class="form-control" 
+                               placeholder="e.g., table1.id = table2.table1_id">
+                    </div>
+                </div>
+                
+                <!-- WHERE Tab -->
+                <div class="tab-pane fade" id="pl-sql-where-{{uuid}}" role="tabpanel">
+                    <div class="mb-3">
+                        <label class="form-label">Where Condition:</label>
+                        <input type="text" id="pl-sql-where-condition-{{uuid}}" class="form-control" 
+                               placeholder="e.g., column > 100">
+                    </div>
+                </div>
+                
+                <!-- ORDER BY Tab -->
+                <div class="tab-pane fade" id="pl-sql-order-{{uuid}}" role="tabpanel">
+                    <div class="mb-3">
+                        <label class="form-label">Order By:</label>
+                        <input type="text" id="pl-sql-order-column-{{uuid}}" class="form-control" 
+                               placeholder="e.g., column_name">
+                    </div>
+                    <div class="mb-3">
+                        <select id="pl-sql-order-direction-{{uuid}}" class="form-select">
+                            <option value="ASC">Ascending (ASC)</option>
+                            <option value="DESC">Descending (DESC)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <label class="form-label">SQL Query:</label>
+                <pre id="pl-sql-preview-{{uuid}}" class="form-control bg-light overflow-auto" style="height: 120px;">SELECT * FROM table</pre>
+            </div>
+            
+            <div class="d-flex justify-content-between mt-3">
+                <button id="pl-sql-builder-reset-{{uuid}}" class="btn btn-secondary">
+                    <i class="fa fa-undo"></i> Reset
+                </button>
+                <button id="pl-sql-builder-run-{{uuid}}" class="btn btn-primary">
+                    <i class="fa fa-play"></i> Run Query
+                </button>
+            </div>
+        </div>
+    </div>
+    {{/show_builder}}
+    
+    <!-- Results Area -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fa fa-table me-2"></i>Results
+            </h5>
+        </div>
+        <div class="card-body">
+            <div id="pl-sql-results-{{uuid}}">
+                <div class="alert alert-info">
+                    Results will appear here after you run a query.
+                </div>
+            </div>
+            <div id="pl-sql-chart-{{uuid}}" class="mt-4" style="height: 300px;">
+                <!-- Chart will be displayed here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Database Schema -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fa fa-database me-2"></i>Database Schema
+            </h5>
+        </div>
+        <div class="card-body">
+            <div id="pl-sql-schema-{{uuid}}">
+                <!-- Schema tables will be loaded here -->
+                <div class="alert alert-info">Loading database schema...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reset Quiz Button (optional) -->
+    {{#show_reset}}
+    <div class="text-center mb-4">
+        <button id="pl-sql-quiz-reset-{{uuid}}" class="btn btn-danger">
+            <i class="fa fa-redo"></i> Reset Quiz
+        </button>
+    </div>
+    {{/show_reset}}
+</div>
+{{/question}}
+
+{{#submission}}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Quiz Results</h5>
+    </div>
+    <div class="card-body">
+        <div id="pl-sql-quiz-results-{{uuid}}">
+            <!-- Load submission data from hidden input -->
+            <script>
+                (() => {
+                    try {
+                        const submissionData = JSON.parse(document.getElementById('pl-sql-quiz-input-{{uuid}}').value);
+                        const totalQuestions = submissionData.questions.length;
+                        const correctAnswers = submissionData.score;
+                        const percentage = Math.round((correctAnswers / totalQuestions) * 100);
+                        
+                        document.getElementById('pl-sql-quiz-results-{{uuid}}').innerHTML = `
+                            <div class="alert alert-info">
+                                <h5>Score: ${correctAnswers} / ${totalQuestions} (${percentage}%)</h5>
+                                <p>You answered ${correctAnswers} out of ${totalQuestions} questions correctly.</p>
+                            </div>
+                        `;
+                    } catch (error) {
+                        console.error('Error displaying quiz results:', error);
+                        document.getElementById('pl-sql-quiz-results-{{uuid}}').innerHTML = `
+                            <div class="alert alert-danger">
+                                <p>Error displaying quiz results.</p>
+                            </div>
+                        `;
+                    }
+                })();
+            </script>
+        </div>
+    </div>
+</div>
+{{/submission}}
+
+{{#answer}}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">Correct Answers</h5>
+    </div>
+    <div class="card-body">
+        <div id="pl-sql-quiz-answers-{{uuid}}">
+            <!-- Load all correct answers from questions data -->
+            <script>
+                (() => {
+                    try {
+                        const questions = JSON.parse('{{{questions}}}'.replace(/&quot;/g, '"'));
+                        let answerHtml = '<div class="accordion" id="pl-sql-quiz-answers-accordion-{{uuid}}">';
+                        
+                        questions.forEach((question, index) => {
+                            const headingId = `answer-heading-${index}`;
+                            const collapseId = `answer-collapse-${index}`;
+                            
+                            answerHtml += `
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="${headingId}">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                                data-bs-target="#${collapseId}" aria-expanded="false" aria-controls="${collapseId}">
+                                            ${question.title}
+                                        </button>
+                                    </h2>
+                                    <div id="${collapseId}" class="accordion-collapse collapse" aria-labelledby="${headingId}"
+                                         data-bs-parent="#pl-sql-quiz-answers-accordion-{{uuid}}">
+                                        <div class="accordion-body">
+                                            <p>${question.description}</p>
+                                            <div class="mt-3">
+                                                <strong>Correct Answer:</strong>
+                                                <div class="sql-snippet p-2 bg-light border mt-2">
+                                                    ${getCorrectAnswer(question)}
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <strong>Explanation:</strong>
+                                                <p>${question.explanation}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        answerHtml += '</div>';
+                        
+                        document.getElementById('pl-sql-quiz-answers-{{uuid}}').innerHTML = answerHtml;
+                        
+                        // Helper function to get correct answer based on question type
+                        function getCorrectAnswer(question) {
+                            switch (question.type) {
+                                case 'multiple-choice':
+                                    return question.options[question.correctAnswer];
+                                
+                                case 'drag-drop':
+                                    return question.correctOrder.map(index => question.segments[index]).join(' ');
+                                
+                                case 'fill-in-blanks':
+                                    let template = question.template;
+                                    for (const [blank, value] of Object.entries(question.correctAnswers)) {
+                                        template = template.replace(`[${blank}]`, value);
+                                    }
+                                    return template;
+                                
+                                case 'build-query':
+                                    return question.segments.map((segment, i) => {
+                                        if (segment.type === 'static') return segment.value;
+                                        return segment.options[question.correctAnswers[i]];
+                                    }).join(' ');
+                                
+                                default:
+                                    return 'No answer available';
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error displaying correct answers:', error);
+                        document.getElementById('pl-sql-quiz-answers-{{uuid}}').innerHTML = `
+                            <div class="alert alert-danger">
+                                <p>Error displaying correct answers.</p>
+                            </div>
+                        `;
+                    }
+                })();
+            </script>
+        </div>
+    </div>
+</div>
+{{/answer}}

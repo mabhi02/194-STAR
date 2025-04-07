@@ -1,0 +1,15 @@
+{
+    "controller": "pl-sql-quiz.py",
+    "dependencies": {
+        "elementScripts": [
+            "pl-sql-quiz.js"
+        ],
+        "elementStyles": [
+            "pl-sql-quiz.css"
+        ],
+        "clientFilesCourseScripts": [
+            "chart.js",
+            "sql.js/sql.js"
+        ]
+    }
+}

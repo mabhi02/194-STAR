@@ -1,0 +1,167 @@
+{
+    "title": "SQL Quiz Question Schema",
+    "description": "Schema for SQL quiz questions",
+    "type": "object",
+    "required": ["title", "description", "questions"],
+    "properties": {
+        "title": {
+            "description": "The title of the quiz",
+            "type": "string"
+        },
+        "description": {
+            "description": "Brief description of the quiz",
+            "type": "string"
+        },
+        "schema": {
+            "description": "Database schema for the SQL quiz",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["name", "columns"],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Table name"
+                    },
+                    "columns": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": ["name", "type"],
+                            "properties": {
+                                "name": {
+                                    "type": "string",
+                                    "description": "Column name"
+                                },
+                                "type": {
+                                    "type": "string",
+                                    "description": "Column data type",
+                                    "enum": ["INTEGER", "TEXT", "REAL", "BLOB", "NULL"]
+                                },
+                                "primaryKey": {
+                                    "type": "boolean",
+                                    "description": "Whether this column is a primary key"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "initSql": {
+            "description": "SQL statements to initialize the database",
+            "type": "string"
+        },
+        "questions": {
+            "description": "Array of quiz questions",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["id", "title", "description", "type"],
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "Unique question identifier"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Question title"
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Question description"
+                    },
+                    "level": {
+                        "type": "string",
+                        "description": "Difficulty level",
+                        "enum": ["easy", "medium", "hard"]
+                    },
+                    "type": {
+                        "type": "string",
+                        "description": "Question type",
+                        "enum": ["multiple-choice", "drag-drop", "fill-in-blanks", "build-query"]
+                    },
+                    "options": {
+                        "type": "array",
+                        "description": "Options for multiple-choice questions",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "correctAnswer": {
+                        "type": "integer",
+                        "description": "Index of the correct answer for multiple-choice questions"
+                    },
+                    "segments": {
+                        "type": "array",
+                        "description": "Query segments for drag-drop questions",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "correctOrder": {
+                        "type": "array",
+                        "description": "Correct order of segments for drag-drop questions",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "template": {
+                        "type": "string",
+                        "description": "Query template for fill-in-blanks questions"
+                    },
+                    "blanks": {
+                        "type": "object",
+                        "description": "Available options for each blank in fill-in-blanks questions",
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "correctAnswers": {
+                        "type": "object",
+                        "description": "Correct answers for blanks in fill-in-blanks questions",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "segments": {
+                        "type": "array",
+                        "description": "Query segments for build-query questions",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "type": "string",
+                                    "enum": ["static", "select"]
+                                },
+                                "value": {
+                                    "type": "string"
+                                },
+                                "options": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "correctAnswers": {
+                        "type": "array",
+                        "description": "Correct option indices for build-query questions",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "explanation": {
+                        "type": "string",
+                        "description": "Explanation of the correct answer"
+                    }
+                }
+            }
+        }
+    }
+}

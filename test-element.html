@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test SQL Quiz Element</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link rel="stylesheet" href="elements/pl-sql-quiz/pl-sql-quiz.css">
+    <script src="elements/pl-sql-quiz/pl-sql-quiz.js"></script>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>SQL Quiz Element Test</h1>
+        <div id="pl-sql-quiz-test" class="mt-4">
+            <!-- Contents from pl-sql-quiz.mustache template will be loaded here -->
+        </div>
+    </div>
+    
+    <script>
+        // Load the quiz data
+        fetch('questions/sql-quiz-example/serverFilesQuestion/sql-fundamentals-quiz.json')
+            .then(response => response.json())
+            .then(data => {
+                // Initialize the element with test data
+                const quizElement = document.getElementById('pl-sql-quiz-test');
+                quizElement.innerHTML = '<div id="pl-sql-quiz-test-uuid"></div>';
+                
+                // Create a mock environment similar to what PrairieLearn provides
+                document.addEventListener('DOMContentLoaded', function() {
+                    initializeSQLQuiz('test-uuid');
+                });
+            })
+            .catch(error => console.error('Error loading quiz data:', error));
+    </script>
+</body>
+</html>
