@@ -4,6 +4,12 @@
 
 ### **SQL Learning Tool Study Protocol**
 
+[go over study to find any needs for clarification and fixing]
+[once finished, email Fox, Garcia, and Norouzi to see if study is good]
+[make study an 1:15 max]
+
+
+
 #### **Objective**
 To evaluate whether the custom-built SQL Query Builder tool accelerates and improves SQL learning outcomes compared to traditional methods (documentation, lectures, static materials).
 
@@ -13,6 +19,7 @@ To evaluate whether the custom-built SQL Query Builder tool accelerates and impr
 - Lower-division UC Berkeley students in CS/DS courses (e.g., CS61A, Data 8).
 - Upper-division students with interest in SQL (e.g., Data 100, CS186).
 - Students with **little to moderate** prior SQL exposure.
+- use a student survey to find level of SQL knowledge.
 
 ---
 
@@ -20,7 +27,7 @@ To evaluate whether the custom-built SQL Query Builder tool accelerates and impr
 
 #### 1. **Participant Grouping**
    - **Group A:** Learners with little/no prior SQL knowledge.
-   - **Group B:** Learners with coding experience (e.g., from CS61A/Data 8).
+   - **Group B:** Learners with coding experience (e.g., from CS61A/Data 8). [delete]
 
 Each group is then **randomly assigned** to:
    - **Treatment group (uses SQL Query Builder tool)**
@@ -28,9 +35,12 @@ Each group is then **randomly assigned** to:
 
 ---
 
-#### 2. **Preparation Phase (60 minutes)**
-- All participants are given **an instructional video** to ensure baseline exposure to prairielearn and SQL builder.
-- Tool group interacts with the Query Builder; Control group uses lecture notes, documentation, and discussion worksheets.
+#### 2. **Study Phase **
+- Give students the materials to understand SQL such as course notes and lecture notes. [10-15 minute read for students] [get html of course notes and reformat to our needs]
+- all students take the pre-test [must be same questions as post test] [have a form to ask prior knowledge or sql statements that they are knowledgeable with]
+- All participants are given **an instructional video** to ensure baseline exposure to prairielearn and SQL builder. [optional] [have it 3-5 minutes max]
+- Tool group interacts with the Query Builder; Control group uses discussion worksheets with solution.
+- post-test [same questions] [same google form]
 - **Environment is controlled** (no external resources or peer discussion).
 
 ---
