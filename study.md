@@ -29,8 +29,8 @@ Each group is then **randomly assigned** to:
 ---
 
 #### 2. **Preparation Phase (60 minutes)**
-- All participants are given **an instructional video** to ensure baseline exposure.
-- Tool group interacts with the Query Builder; Control group uses lecture notes or documentation.
+- All participants are given **an instructional video** to ensure baseline exposure to prairielearn and SQL builder.
+- Tool group interacts with the Query Builder; Control group uses lecture notes, documentation, and discussion worksheets.
 - **Environment is controlled** (no external resources or peer discussion).
 
 ---
