@@ -6,33 +6,195 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <link rel="stylesheet" href="elements/pl-sql-quiz/pl-sql-quiz.css">
     <script src="elements/pl-sql-quiz/pl-sql-quiz.js"></script>
+    
+    <style>
+        .container { max-width: 1200px; }
+        .schema-table-header { cursor: pointer; }
+        .column-option { 
+            display: inline-block; 
+            padding: 4px 8px; 
+            margin: 4px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        .column-option.selected { 
+            background-color: #007bff; 
+            color: white; 
+            border-color: #0056b3; 
+        }
+        .toast-container { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 9999; 
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-4">
         <h1>SQL Quiz Element Test</h1>
+        <div class="alert alert-info">
+            <h4 class="alert-heading">Running Locally</h4>
+            <p>This is a test page for the SQL Quiz element. The following SQL examples feature book-related queries:</p>
+            <ol>
+                <li>Find books with price greater than 50</li>
+                <li>Join books and book_orders to get order info</li>
+                <li>Find book orders for expensive books (price > 40)</li>
+                <li>Group orders by genre and calculate totals</li>
+            </ol>
+            <p><strong>Use the query builder to explore the database and build your own queries!</strong></p>
+        </div>
+        
         <div id="pl-sql-quiz-test" class="mt-4">
             <!-- Contents from pl-sql-quiz.mustache template will be loaded here -->
         </div>
     </div>
     
+    <script id="pl-sql-quiz-questions-test-uuid" type="application/json">
+        {
+            "title": "SQL Fundamentals Quiz",
+            "description": "Test your understanding of SQL queries",
+            "schema": [
+              {
+                "name": "books",
+                "columns": [
+                  {"name": "id", "type": "INTEGER", "primaryKey": true},
+                  {"name": "title", "type": "TEXT", "primaryKey": false},
+                  {"name": "author", "type": "TEXT", "primaryKey": false},
+                  {"name": "price", "type": "REAL", "primaryKey": false},
+                  {"name": "publication_year", "type": "INTEGER", "primaryKey": false},
+                  {"name": "genre", "type": "TEXT", "primaryKey": false}
+                ]
+              },
+              {
+                "name": "book_orders",
+                "columns": [
+                  {"name": "id", "type": "INTEGER", "primaryKey": true},
+                  {"name": "book_id", "type": "INTEGER", "primaryKey": false},
+                  {"name": "order_date", "type": "TEXT", "primaryKey": false},
+                  {"name": "quantity", "type": "INTEGER", "primaryKey": false},
+                  {"name": "customer_name", "type": "TEXT", "primaryKey": false}
+                ]
+              }
+            ],
+            "questions": [
+              {
+                "id": 1,
+                "title": "Books with High Prices",
+                "description": "In the books table, find the title, price, and publication_year for all books with a price greater than 50.",
+                "level": "easy",
+                "type": "multiple-choice",
+                "options": [
+                  "SELECT title, price, publication_year FROM books WHERE price > 50;",
+                  "SELECT title, price, publication_year FROM books WHERE price >= 50;",
+                  "SELECT * FROM books WHERE price > 50;",
+                  "SELECT title, publication_year, price FROM books WHERE price > 50;"
+                ],
+                "correctAnswer": 0,
+                "explanation": "This query selects specific columns (title, price, publication_year) from the books table where the price is greater than 50."
+              },
+              {
+                "id": 2,
+                "title": "Book Orders Information",
+                "description": "Using the books and book_orders tables, find the title, order_date, and quantity for each book order.",
+                "level": "medium",
+                "type": "multiple-choice",
+                "options": [
+                  "SELECT b.title, bo.order_date, bo.quantity FROM book_orders AS bo JOIN books AS b ON bo.book_id = b.id;",
+                  "SELECT books.title, book_orders.order_date, book_orders.quantity FROM books JOIN book_orders ON books.id = book_orders.book_id;",
+                  "SELECT title, order_date, quantity FROM books, book_orders WHERE books.id = book_orders.book_id;",
+                  "SELECT b.title, bo.order_date, bo.quantity FROM books b, book_orders bo WHERE b.id = bo.book_id;"
+                ],
+                "correctAnswer": 0,
+                "explanation": "This query joins the books and book_orders tables using aliases to find the title from books along with the order_date and quantity from book_orders."
+              },
+              {
+                "id": 3,
+                "title": "Expensive Book Orders",
+                "description": "Using the books and book_orders tables, find the title, order_date, and quantity for all book orders where the book price is greater than 40.",
+                "level": "medium",
+                "type": "multiple-choice",
+                "options": [
+                  "SELECT b.title, bo.order_date, bo.quantity FROM book_orders bo JOIN books b ON bo.book_id = b.id WHERE b.price > 40;",
+                  "SELECT books.title, book_orders.order_date, book_orders.quantity FROM books JOIN book_orders ON books.id = book_orders.book_id WHERE books.price > 40;",
+                  "SELECT title, order_date, quantity FROM books, book_orders WHERE books.id = book_orders.book_id AND price > 40;",
+                  "SELECT b.title, bo.order_date, bo.quantity FROM books b INNER JOIN book_orders bo ON b.id = bo.book_id AND b.price > 40;"
+                ],
+                "correctAnswer": 0,
+                "explanation": "This query joins the books and book_orders tables and adds a WHERE clause to filter for books with a price greater than 40."
+              },
+              {
+                "id": 4,
+                "title": "Orders by Genre",
+                "description": "Find the genre and the total number of books ordered for each genre, ordered by the total number of books (descending).",
+                "level": "medium",
+                "type": "build-query",
+                "segments": [
+                  {"type": "static", "value": "SELECT"},
+                  {"type": "select", "options": ["b.genre", "genre", "books.genre", "b.*"]},
+                  {"type": "static", "value": ", "},
+                  {"type": "select", "options": ["COUNT(*)", "SUM(bo.quantity)", "SUM(quantity)", "COUNT(bo.id)"]},
+                  {"type": "static", "value": " FROM books b JOIN book_orders bo ON b.id = bo.book_id "},
+                  {"type": "select", "options": ["ORDER BY", "GROUP BY", "HAVING", "WHERE"]},
+                  {"type": "select", "options": ["b.genre", "genre", "books.genre", "b.*"]},
+                  {"type": "static", "value": " ORDER BY SUM(bo.quantity) DESC"}
+                ],
+                "correctAnswers": [0, 1, 1, 0],
+                "explanation": "This query uses GROUP BY to aggregate book orders by genre and calculates the sum of quantities ordered for each genre."
+              }
+            ]
+          }
+    </script>
+    
+    <script id="pl-sql-quiz-init-sql-test-uuid" type="text/sql">
+        CREATE TABLE books (id INTEGER PRIMARY KEY, title TEXT, author TEXT, price REAL, publication_year INTEGER, genre TEXT);
+        CREATE TABLE book_orders (id INTEGER PRIMARY KEY, book_id INTEGER, order_date TEXT, quantity INTEGER, customer_name TEXT, FOREIGN KEY (book_id) REFERENCES books(id));
+
+        INSERT INTO books VALUES (1, 'SQL Mastery', 'Jane Doe', 55.99, 2021, 'Technical');
+        INSERT INTO books VALUES (2, 'Database Design', 'John Smith', 45.50, 2020, 'Technical');
+        INSERT INTO books VALUES (3, 'Cloud Computing', 'Maria Garcia', 65.75, 2022, 'Technical');
+        INSERT INTO books VALUES (4, 'AI Fundamentals', 'Robert Johnson', 59.99, 2021, 'Technical');
+        INSERT INTO books VALUES (5, 'Web Development', 'Alex Chen', 42.25, 2020, 'Technical');
+
+        INSERT INTO book_orders VALUES (1, 1, '2023-01-05', 2, 'Emma Wilson');
+        INSERT INTO book_orders VALUES (2, 2, '2023-01-10', 1, 'Michael Brown');
+        INSERT INTO book_orders VALUES (3, 3, '2023-02-15', 3, 'Sophia Lee');
+        INSERT INTO book_orders VALUES (4, 1, '2023-02-20', 1, 'David Kim');
+        INSERT INTO book_orders VALUES (5, 4, '2023-03-01', 2, 'Olivia Martinez');
+    </script>
+    
     <script>
-        // Load the quiz data
-        fetch('questions/sql-quiz-example/serverFilesQuestion/sql-fundamentals-quiz.json')
-            .then(response => response.json())
-            .then(data => {
-                // Initialize the element with test data
-                const quizElement = document.getElementById('pl-sql-quiz-test');
-                quizElement.innerHTML = '<div id="pl-sql-quiz-test-uuid"></div>';
-                
-                // Create a mock environment similar to what PrairieLearn provides
-                document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the element with test data
+            const quizElement = document.getElementById('pl-sql-quiz-test');
+            
+            // Load the mustache template from pl-sql-quiz.mustache file
+            fetch('elements/pl-sql-quiz/pl-sql-quiz.mustache')
+                .then(response => response.text())
+                .then(template => {
+                    // Replace mustache tags
+                    let html = template
+                        .replace(/{{uuid}}/g, 'test-uuid')
+                        .replace(/{{title}}/g, 'SQL Quiz Test')
+                        .replace(/{{#question}}/g, '')
+                        .replace(/{{\/question}}/g, '')
+                        .replace(/{{#show_builder}}/g, '')
+                        .replace(/{{\/show_builder}}/g, '')
+                        .replace(/{{#show_reset}}/g, '')
+                        .replace(/{{\/show_reset}}/g, '')
+                        .replace(/{{answers_name}}/g, 'test-answers');
+                    
+                    // Set HTML and initialize quiz
+                    quizElement.innerHTML = html;
                     initializeSQLQuiz('test-uuid');
-                });
-            })
-            .catch(error => console.error('Error loading quiz data:', error));
+                })
+                .catch(error => console.error('Error loading template:', error));
+        });
     </script>
 </body>
 </html>

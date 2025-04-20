@@ -114,6 +114,7 @@ class SQLQueryBuilder {
         this.joinTable = '';
         this.joinCondition = '';
         this.whereCondition = '';
+        this.groupByColumn = '';
         this.orderColumn = '';
         this.orderDirection = 'ASC';
         
@@ -135,6 +136,9 @@ class SQLQueryBuilder {
         
         // WHERE tab elements
         this.whereConditionEl = document.getElementById(`pl-sql-where-condition-${uuid}`);
+        
+        // GROUP BY tab elements
+        this.groupByColumnEl = document.getElementById(`pl-sql-group-by-column-${uuid}`);
         
         // ORDER BY tab elements
         this.orderColumnEl = document.getElementById(`pl-sql-order-column-${uuid}`);
@@ -193,6 +197,11 @@ class SQLQueryBuilder {
         
         this.whereConditionEl.addEventListener('input', () => {
             this.whereCondition = this.whereConditionEl.value;
+            this.updateSqlPreview();
+        });
+        
+        this.groupByColumnEl.addEventListener('input', () => {
+            this.groupByColumn = this.groupByColumnEl.value;
             this.updateSqlPreview();
         });
         
@@ -323,6 +332,11 @@ class SQLQueryBuilder {
             sql += `\nWHERE ${this.whereCondition}`;
         }
         
+        // Add GROUP BY clause
+        if (this.groupByColumn) {
+            sql += `\nGROUP BY ${this.groupByColumn}`;
+        }
+        
         // Add ORDER BY clause
         if (this.orderColumn) {
             sql += `\nORDER BY ${this.orderColumn} ${this.orderDirection}`;
@@ -340,6 +354,7 @@ class SQLQueryBuilder {
         this.joinTable = '';
         this.joinCondition = '';
         this.whereCondition = '';
+        this.groupByColumn = '';
         this.orderColumn = '';
         this.orderDirection = 'ASC';
         
@@ -349,6 +364,7 @@ class SQLQueryBuilder {
         this.joinTypeEl.value = 'INNER JOIN';
         this.joinTableEl.value = '';
         this.joinConditionEl.value = '';
+        if (this.groupByColumnEl) this.groupByColumnEl.value = '';
         this.whereConditionEl.value = '';
         this.orderColumnEl.value = '';
         this.orderDirectionEl.value = 'ASC';

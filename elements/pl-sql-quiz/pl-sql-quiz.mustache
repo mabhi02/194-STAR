@@ -57,6 +57,9 @@
                     <button class="nav-link" id="pl-sql-where-tab-{{uuid}}" data-bs-toggle="tab" data-bs-target="#pl-sql-where-{{uuid}}" type="button" role="tab">WHERE</button>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="pl-sql-group-tab-{{uuid}}" data-bs-toggle="tab" data-bs-target="#pl-sql-group-{{uuid}}" type="button" role="tab">GROUP BY</button>
+                </li>
+                <li class="nav-item" role="presentation">
                     <button class="nav-link" id="pl-sql-order-tab-{{uuid}}" data-bs-toggle="tab" data-bs-target="#pl-sql-order-{{uuid}}" type="button" role="tab">ORDER BY</button>
                 </li>
             </ul>
@@ -108,6 +111,21 @@
                         <label class="form-label">Where Condition:</label>
                         <input type="text" id="pl-sql-where-condition-{{uuid}}" class="form-control" 
                                placeholder="e.g., column > 100">
+                    </div>
+                </div>
+                
+                <!-- GROUP BY Tab -->
+                <div class="tab-pane fade" id="pl-sql-group-{{uuid}}" role="tabpanel">
+                    <div class="mb-3">
+                        <label class="form-label">Group By Column:</label>
+                        <input type="text" id="pl-sql-group-by-column-{{uuid}}" class="form-control" 
+                               placeholder="e.g., category">
+                    </div>
+                    <div class="alert alert-info">
+                        <small>
+                            <i class="fa fa-info-circle me-1"></i>
+                            When using GROUP BY, select columns should include aggregate functions like COUNT(), SUM(), AVG(), etc.
+                        </small>
                     </div>
                 </div>
                 

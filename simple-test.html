@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple SQL Quiz Test</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <style>
+        .container { max-width: 1200px; }
+        .schema-table-header { cursor: pointer; }
+        .column-option { 
+            display: inline-block; 
+            padding: 4px 8px; 
+            margin: 4px; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        .column-option.selected { 
+            background-color: #007bff; 
+            color: white; 
+            border-color: #0056b3; 
+        }
+        .toast-container { 
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 9999; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Simple SQL Quiz Test</h1>
+        
+        <div class="alert alert-info">
+            <h4 class="alert-heading">Book Query Examples</h4>
+            <p>Examples of SQL queries using the books database:</p>
+            <ol>
+                <li><code>SELECT title, price, publication_year FROM books WHERE price > 50;</code></li>
+                <li><code>SELECT b.title, bo.order_date, bo.quantity FROM book_orders AS bo JOIN books AS b ON bo.book_id = b.id;</code></li>
+                <li><code>SELECT b.title, bo.order_date, bo.quantity FROM book_orders bo JOIN books b ON bo.book_id = b.id WHERE b.price > 40;</code></li>
+                <li><code>SELECT b.genre, SUM(bo.quantity) FROM books b JOIN book_orders bo ON b.id = bo.book_id GROUP BY b.genre ORDER BY SUM(bo.quantity) DESC;</code></li>
+            </ol>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fa fa-tools me-2"></i>SQL Query Builder
+                </h5>
+                <button id="builder-toggle" class="btn btn-sm btn-outline-primary">
+                    <i class="fa fa-minus"></i>
+                </button>
+            </div>
+            <div id="builder-content" class="card-body">
+                <ul class="nav nav-tabs" id="builder-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="select-tab" data-bs-toggle="tab" data-bs-target="#select" type="button" role="tab">SELECT</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="join-tab" data-bs-toggle="tab" data-bs-target="#join" type="button" role="tab">JOIN</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="where-tab" data-bs-toggle="tab" data-bs-target="#where" type="button" role="tab">WHERE</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="group-tab" data-bs-toggle="tab" data-bs-target="#group" type="button" role="tab">GROUP BY</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="order-tab" data-bs-toggle="tab" data-bs-target="#order" type="button" role="tab">ORDER BY</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content pt-3" id="builder-tab-content">
+                    <!-- SELECT Tab -->
+                    <div class="tab-pane fade show active" id="select" role="tabpanel">
+                        <div class="mb-3">
+                            <label class="form-label">Select Table:</label>
+                            <select id="select-table" class="form-select">
+                                <option value="books">books</option>
+                                <option value="book_orders">book_orders</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Select Columns:</label>
+                            <div id="select-columns" class="d-flex flex-wrap gap-2 p-2 border rounded">
+                                <div class="column-option" data-column="id">id</div>
+                                <div class="column-option" data-column="title">title</div>
+                                <div class="column-option" data-column="author">author</div>
+                                <div class="column-option" data-column="price">price</div>
+                                <div class="column-option" data-column="publication_year">publication_year</div>
+                                <div class="column-option" data-column="genre">genre</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- JOIN Tab -->
+                    <div class="tab-pane fade" id="join" role="tabpanel">
+                        <div class="mb-3">
+                            <label class="form-label">Join Type:</label>
+                            <select id="join-type" class="form-select">
+                                <option value="INNER JOIN">INNER JOIN</option>
+                                <option value="LEFT JOIN">LEFT JOIN</option>
+                                <option value="RIGHT JOIN">RIGHT JOIN</option>
+                                <option value="FULL JOIN">FULL JOIN</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Join Table:</label>
+                            <select id="join-table" class="form-select">
+                                <option value="">-- Select a table --</option>
+                                <option value="books">books</option>
+                                <option value="book_orders">book_orders</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ON Condition:</label>
+                            <input type="text" id="join-condition" class="form-control" 
+                                   placeholder="e.g., books.id = book_orders.book_id">
+                        </div>
+                    </div>
+                    
+                    <!-- WHERE Tab -->
+                    <div class="tab-pane fade" id="where" role="tabpanel">
+                        <div class="mb-3">
+                            <label class="form-label">Where Condition:</label>
+                            <input type="text" id="where-condition" class="form-control" 
+                                   placeholder="e.g., price > 50">
+                        </div>
+                    </div>
+                    
+                    <!-- GROUP BY Tab -->
+                    <div class="tab-pane fade" id="group" role="tabpanel">
+                        <div class="mb-3">
+                            <label class="form-label">Group By Column:</label>
+                            <input type="text" id="group-by-column" class="form-control" 
+                                   placeholder="e.g., genre">
+                        </div>
+                        <div class="alert alert-info">
+                            <small>
+                                <i class="fa fa-info-circle me-1"></i>
+                                When using GROUP BY, select columns should include aggregate functions like COUNT(), SUM(), AVG(), etc.
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- ORDER BY Tab -->
+                    <div class="tab-pane fade" id="order" role="tabpanel">
+                        <div class="mb-3">
+                            <label class="form-label">Order By:</label>
+                            <input type="text" id="order-column" class="form-control" 
+                                   placeholder="e.g., price">
+                        </div>
+                        <div class="mb-3">
+                            <select id="order-direction" class="form-select">
+                                <option value="ASC">Ascending (ASC)</option>
+                                <option value="DESC">Descending (DESC)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <label class="form-label">SQL Query:</label>
+                    <pre id="sql-preview" class="form-control bg-light overflow-auto" style="height: 120px;">SELECT * FROM books</pre>
+                </div>
+                
+                <div class="d-flex justify-content-between mt-3">
+                    <button id="builder-reset" class="btn btn-secondary">
+                        <i class="fa fa-undo"></i> Reset
+                    </button>
+                    <button id="builder-run" class="btn btn-primary">
+                        <i class="fa fa-play"></i> Run Query
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results Area -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fa fa-table me-2"></i>Results
+                </h5>
+            </div>
+            <div class="card-body">
+                <div id="results">
+                    <div class="alert alert-info">
+                        Results will appear here after you run a query.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Variables
+            const selectedColumns = [];
+            let selectedTable = 'books';
+            let joinType = 'INNER JOIN';
+            let joinTable = '';
+            let joinCondition = '';
+            let whereCondition = '';
+            let groupByColumn = '';
+            let orderColumn = '';
+            let orderDirection = 'ASC';
+            
+            // Elements
+            const builderToggle = document.getElementById('builder-toggle');
+            const builderContent = document.getElementById('builder-content');
+            const builderReset = document.getElementById('builder-reset');
+            const builderRun = document.getElementById('builder-run');
+            const selectTable = document.getElementById('select-table');
+            const selectColumns = document.getElementById('select-columns');
+            const joinTypeEl = document.getElementById('join-type');
+            const joinTableEl = document.getElementById('join-table');
+            const joinConditionEl = document.getElementById('join-condition');
+            const whereConditionEl = document.getElementById('where-condition');
+            const groupByColumnEl = document.getElementById('group-by-column');
+            const orderColumnEl = document.getElementById('order-column');
+            const orderDirectionEl = document.getElementById('order-direction');
+            const sqlPreview = document.getElementById('sql-preview');
+            const resultsEl = document.getElementById('results');
+            
+            // Toggle builder visibility
+            builderToggle.addEventListener('click', () => {
+                if (builderContent.style.display === 'none') {
+                    builderContent.style.display = 'block';
+                    builderToggle.innerHTML = '<i class="fa fa-minus"></i>';
+                } else {
+                    builderContent.style.display = 'none';
+                    builderToggle.innerHTML = '<i class="fa fa-plus"></i>';
+                }
+            });
+            
+            // Reset builder
+            builderReset.addEventListener('click', () => {
+                selectedTable = 'books';
+                selectedColumns.length = 0;
+                joinType = 'INNER JOIN';
+                joinTable = '';
+                joinCondition = '';
+                whereCondition = '';
+                groupByColumn = '';
+                orderColumn = '';
+                orderDirection = 'ASC';
+                
+                // Reset form controls
+                selectTable.value = 'books';
+                selectColumns.querySelectorAll('.column-option').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                joinTypeEl.value = 'INNER JOIN';
+                joinTableEl.value = '';
+                joinConditionEl.value = '';
+                whereConditionEl.value = '';
+                groupByColumnEl.value = '';
+                orderColumnEl.value = '';
+                orderDirectionEl.value = 'ASC';
+                
+                updateSqlPreview();
+            });
+            
+            // Run query
+            builderRun.addEventListener('click', () => {
+                const sql = sqlPreview.textContent;
+                resultsEl.innerHTML = `
+                    <div class="alert alert-info">
+                        <p><strong>Query:</strong> ${sql}</p>
+                        <p>In a real implementation, this would execute against the SQL.js database and show results.</p>
+                    </div>
+                `;
+            });
+            
+            // Column selection
+            selectColumns.querySelectorAll('.column-option').forEach(col => {
+                col.addEventListener('click', () => {
+                    col.classList.toggle('selected');
+                    const colName = col.dataset.column;
+                    
+                    if (col.classList.contains('selected')) {
+                        if (selectedTable) {
+                            selectedColumns.push(`${selectedTable}.${colName}`);
+                        } else {
+                            selectedColumns.push(colName);
+                        }
+                    } else {
+                        const index = selectedColumns.indexOf(`${selectedTable}.${colName}`);
+                        if (index > -1) {
+                            selectedColumns.splice(index, 1);
+                        }
+                    }
+                    
+                    updateSqlPreview();
+                });
+            });
+            
+            // Event listeners for form controls
+            selectTable.addEventListener('change', () => {
+                selectedTable = selectTable.value;
+                updateSqlPreview();
+            });
+            
+            joinTypeEl.addEventListener('change', () => {
+                joinType = joinTypeEl.value;
+                updateSqlPreview();
+            });
+            
+            joinTableEl.addEventListener('change', () => {
+                joinTable = joinTableEl.value;
+                updateSqlPreview();
+            });
+            
+            joinConditionEl.addEventListener('input', () => {
+                joinCondition = joinConditionEl.value;
+                updateSqlPreview();
+            });
+            
+            whereConditionEl.addEventListener('input', () => {
+                whereCondition = whereConditionEl.value;
+                updateSqlPreview();
+            });
+            
+            groupByColumnEl.addEventListener('input', () => {
+                groupByColumn = groupByColumnEl.value;
+                updateSqlPreview();
+            });
+            
+            orderColumnEl.addEventListener('input', () => {
+                orderColumn = orderColumnEl.value;
+                updateSqlPreview();
+            });
+            
+            orderDirectionEl.addEventListener('change', () => {
+                orderDirection = orderDirectionEl.value;
+                updateSqlPreview();
+            });
+            
+            // Update SQL preview
+            function updateSqlPreview() {
+                let sql = 'SELECT ';
+                
+                // Add columns
+                if (selectedColumns.length > 0) {
+                    sql += selectedColumns.join(', ');
+                } else {
+                    sql += '*';
+                }
+                
+                // Add FROM clause
+                if (selectedTable) {
+                    sql += ` FROM ${selectedTable}`;
+                } else {
+                    sql += ' FROM table';
+                }
+                
+                // Add JOIN clause
+                if (joinTable && joinCondition) {
+                    sql += `\n${joinType} ${joinTable} ON ${joinCondition}`;
+                }
+                
+                // Add WHERE clause
+                if (whereCondition) {
+                    sql += `\nWHERE ${whereCondition}`;
+                }
+                
+                // Add GROUP BY clause
+                if (groupByColumn) {
+                    sql += `\nGROUP BY ${groupByColumn}`;
+                }
+                
+                // Add ORDER BY clause
+                if (orderColumn) {
+                    sql += `\nORDER BY ${orderColumn} ${orderDirection}`;
+                }
+                
+                // Update SQL preview
+                sqlPreview.textContent = sql;
+            }
+            
+            // Initialize
+            updateSqlPreview();
+        });
+    </script>
+</body>
+</html> 

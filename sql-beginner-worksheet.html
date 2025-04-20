@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SQL Tutorial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 950px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+        }
+        h1 {
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        .section {
+            margin-bottom: 35px;
+            padding-bottom: 20px;
+        }
+        .subsection {
+            margin-left: 20px;
+            margin-bottom: 25px;
+        }
+        .exercise {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 5px solid #3498db;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .example {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-left: 5px solid #2ecc71;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .note {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-left: 5px solid #ffc107;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .important {
+            background-color: #f8d7da;
+            padding: 15px;
+            border-left: 5px solid #dc3545;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: Consolas, Monaco, 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            line-height: 1.4;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .answer-space {
+            border: 1px dashed #ccc;
+            padding: 15px;
+            min-height: 80px;
+            margin-top: 10px;
+            background-color: white;
+        }
+        .quiz-question {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: #e8f6ff;
+            border-radius: 4px;
+        }
+        .quiz-options label {
+            display: block;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .quiz-options label:hover {
+            background-color: #f0f0f0;
+        }
+        .knowledge-check {
+            background-color: #e0f7fa;
+            padding: 20px;
+            border-radius: 4px;
+            margin: 25px 0;
+        }
+        .concept-diagram {
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .key-concept {
+            background-color: #e8eaf6;
+            padding: 15px;
+            border-left: 5px solid #3f51b5;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        @media print {
+            body {
+                font-size: 12pt;
+            }
+            .no-print {
+                display: none;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+            pre, code {
+                font-size: 10pt;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button onclick="window.print()" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 20px;">Print Tutorial</button>
+    </div>
+
+    <h1>SQL Tutorial</h1>
+    
+    <div class="section">
+        <h2>Introduction to Databases and SQL</h2>
+        
+        <div class="subsection">
+            <h3>What is a Database?</h3>
+            <p>A database is an organized collection of structured data stored electronically on a computer system. Databases are designed to efficiently store, manage, and retrieve information.</p>
+            
+            <div class="key-concept">
+                <h4>Key Database Concepts:</h4>
+                <ul>
+                    <li><strong>Database Management System (DBMS)</strong>: Software that manages databases, like MySQL, PostgreSQL, Oracle, or Microsoft SQL Server.</li>
+                    <li><strong>Relational Database</strong>: Organizes data into tables with relationships between them.</li>
+                    <li><strong>Table</strong>: A collection of related data organized in rows and columns (similar to a spreadsheet).</li>
+                    <li><strong>Row</strong>: Also called a record or tuple, represents a single entity in a table.</li>
+                    <li><strong>Column</strong>: Also called a field or attribute, represents a specific piece of data all records have.</li>
+                    <li><strong>Primary Key</strong>: A unique identifier for each row in a table.</li>
+                    <li><strong>Foreign Key</strong>: A field in one table that connects to the primary key in another table.</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>What is SQL?</h3>
+            <p>SQL (Structured Query Language) is a standardized programming language specifically designed for managing and manipulating relational databases. It allows you to create database structures, insert data, update information, delete records, and retrieve specific data based on various criteria.</p>
+            
+            <div class="key-concept">
+                <h4>SQL Can Be Used For:</h4>
+                <ul>
+                    <li>Creating and modifying database structures</li>
+                    <li>Adding, updating, and removing data</li>
+                    <li>Retrieving data with specific criteria</li>
+                    <li>Performing calculations and aggregations on data</li>
+                    <li>Combining data from multiple tables</li>
+                    <li>Controlling access to data</li>
+                </ul>
+            </div>
+            
+            <div class="note">
+                <p><strong>Note:</strong> While SQL is standardized, different database systems (like MySQL, PostgreSQL, Oracle, etc.) may have slight variations in syntax. This tutorial focuses on standard SQL that works across most systems.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Database Structure for This Tutorial</h2>
+        
+        <p>Throughout this tutorial, we'll work with a bookstore database that contains information about books and book orders. This database consists of several tables, but we'll primarily focus on two main tables:</p>
+        
+        <div class="subsection">
+            <h3>The "books" Table</h3>
+            <p>This table stores information about individual books:</p>
+            
+            <table>
+                <tr>
+                    <th>id</th>
+                    <th>title</th>
+                    <th>author</th>
+                    <th>price</th>
+                    <th>publication_year</th>
+                    <th>genre</th>
+                    <th>publisher</th>
+                    <th>page_count</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>SQL Fundamentals</td>
+                    <td>Jane Smith</td>
+                    <td>29.99</td>
+                    <td>2020</td>
+                    <td>Education</td>
+                    <td>Tech Press</td>
+                    <td>350</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>Data Analysis</td>
+                    <td>John Doe</td>
+                    <td>45.99</td>
+                    <td>2019</td>
+                    <td>Education</td>
+                    <td>Data Books</td>
+                    <td>480</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>Database Design</td>
+                    <td>Alice Johnson</td>
+                    <td>52.50</td>
+                    <td>2021</td>
+                    <td>Education</td>
+                    <td>Tech Press</td>
+                    <td>525</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Mystery at Midnight</td>
+                    <td>Robert Brown</td>
+                    <td>19.99</td>
+                    <td>2022</td>
+                    <td>Fiction</td>
+                    <td>Novel House</td>
+                    <td>320</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>The History of Data</td>
+                    <td>Jane Smith</td>
+                    <td>39.99</td>
+                    <td>2020</td>
+                    <td>History</td>
+                    <td>History Books</td>
+                    <td>400</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>Python for Beginners</td>
+                    <td>Alice Johnson</td>
+                    <td>49.99</td>
+                    <td>2021</td>
+                    <td>Education</td>
+                    <td>Tech Press</td>
+                    <td>380</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>Cooking Basics</td>
+                    <td>Maria Garcia</td>
+                    <td>24.99</td>
+                    <td>2019</td>
+                    <td>Cooking</td>
+                    <td>Food Press</td>
+                    <td>250</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>Advanced SQL</td>
+                    <td>Jane Smith</td>
+                    <td>59.99</td>
+                    <td>2022</td>
+                    <td>Education</td>
+                    <td>Tech Press</td>
+                    <td>425</td>
+                </tr>
+                <tr>
+                    <td>9</td>
+                    <td>Web Development</td>
+                    <td>Michael Wilson</td>
+                    <td>47.50</td>
+                    <td>2020</td>
+                    <td>Education</td>
+                    <td>Code Books</td>
+                    <td>490</td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td>Summer Adventures</td>
+                    <td>Robert Brown</td>
+                    <td>22.95</td>
+                    <td>2021</td>
+                    <td>Fiction</td>
+                    <td>Novel House</td>
+                    <td>310</td>
+                </tr>
+            </table>
+            
+            <div class="key-concept">
+                <p><strong>Table Structure Explanation:</strong></p>
+                <ul>
+                    <li><strong>id</strong>: Primary key that uniquely identifies each book</li>
+                    <li><strong>title</strong>: The title of the book</li>
+                    <li><strong>author</strong>: The author of the book</li>
+                    <li><strong>price</strong>: The price of the book in USD</li>
+                    <li><strong>publication_year</strong>: The year the book was published</li>
+                    <li><strong>genre</strong>: The category or genre of the book</li>
+                    <li><strong>publisher</strong>: The company that published the book</li>
+                    <li><strong>page_count</strong>: Number of pages in the book</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>The "book_orders" Table</h3>
+            <p>This table stores information about orders placed for books:</p>
+            
+            <table>
+                <tr>
+                    <th>id</th>
+                    <th>book_id</th>
+                    <th>customer_id</th>
+                    <th>order_date</th>
+                    <th>quantity</th>
+                    <th>shipping_status</th>
+                    <th>payment_method</th>
+                </tr>
+                <tr>
+                    <td>1</td>
+                    <td>1</td>
+                    <td>101</td>
+                    <td>2023-01-15</td>
+                    <td>2</td>
+                    <td>Delivered</td>
+                    <td>Credit Card</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>3</td>
+                    <td>102</td>
+                    <td>2023-01-16</td>
+                    <td>1</td>
+                    <td>Shipped</td>
+                    <td>PayPal</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>2</td>
+                    <td>101</td>
+                    <td>2023-01-20</td>
+                    <td>1</td>
+                    <td>Delivered</td>
+                    <td>Credit Card</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>5</td>
+                    <td>103</td>
+                    <td>2023-01-25</td>
+                    <td>3</td>
+                    <td>Processing</td>
+                    <td>Bank Transfer</td>
+                </tr>
+                <tr>
+                    <td>5</td>
+                    <td>4</td>
+                    <td>104</td>
+                    <td>2023-02-01</td>
+                    <td>2</td>
+                    <td>Shipped</td>
+                    <td>Credit Card</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>6</td>
+                    <td>102</td>
+                    <td>2023-02-03</td>
+                    <td>1</td>
+                    <td>Delivered</td>
+                    <td>PayPal</td>
+                </tr>
+                <tr>
+                    <td>7</td>
+                    <td>1</td>
+                    <td>103</td>
+                    <td>2023-02-10</td>
+                    <td>1</td>
+                    <td>Processing</td>
+                    <td>Credit Card</td>
+                </tr>
+                <tr>
+                    <td>8</td>
+                    <td>8</td>
+                    <td>105</td>
+                    <td>2023-02-12</td>
+                    <td>1</td>
+                    <td>Delivered</td>
+                    <td>Credit Card</td>
+                </tr>
+                <tr>
+                    <td>9</td>
+                    <td>9</td>
+                    <td>106</td>
+                    <td>2023-02-15</td>
+                    <td>2</td>
+                    <td>Shipped</td>
+                    <td>PayPal</td>
+                </tr>
+                <tr>
+                    <td>10</td>
+                    <td>7</td>
+                    <td>107</td>
+                    <td>2023-02-18</td>
+                    <td>3</td>
+                    <td>Processing</td>
+                    <td>Bank Transfer</td>
+                </tr>
+                <tr>
+                    <td>11</td>
+                    <td>10</td>
+                    <td>108</td>
+                    <td>2023-02-20</td>
+                    <td>1</td>
+                    <td>Delivered</td>
+                    <td>Credit Card</td>
+                </tr>
+                <tr>
+                    <td>12</td>
+                    <td>2</td>
+                    <td>109</td>
+                    <td>2023-02-22</td>
+                    <td>2</td>
+                    <td>Processing</td>
+                    <td>PayPal</td>
+                </tr>
+                <tr>
+                    <td>13</td>
+                    <td>3</td>
+                    <td>110</td>
+                    <td>2023-02-25</td>
+                    <td>1</td>
+                    <td>Shipped</td>
+                    <td>Credit Card</td>
+                </tr>
+                <tr>
+                    <td>14</td>
+                    <td>5</td>
+                    <td>111</td>
+                    <td>2023-03-01</td>
+                    <td>1</td>
+                    <td>Processing</td>
+                    <td>Bank Transfer</td>
+                </tr>
+                <tr>
+                    <td>15</td>
+                    <td>4</td>
+                    <td>112</td>
+                    <td>2023-03-05</td>
+                    <td>2</td>
+                    <td>Delivered</td>
+                    <td>Credit Card</td>
+                </tr>
+            </table>
+            
+            <div class="key-concept">
+                <p><strong>Table Structure Explanation:</strong></p>
+                <ul>
+                    <li><strong>id</strong>: Primary key that uniquely identifies each order</li>
+                    <li><strong>book_id</strong>: Foreign key that references the id in the books table</li>
+                    <li><strong>customer_id</strong>: Identifier for the customer who placed the order</li>
+                    <li><strong>order_date</strong>: The date when the order was placed</li>
+                    <li><strong>quantity</strong>: The number of copies ordered</li>
+                    <li><strong>shipping_status</strong>: Current status of the order (Processing, Shipped, Delivered)</li>
+                    <li><strong>payment_method</strong>: Method used for payment</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>Table Relationships</h3>
+            <p>In our database, the two tables are related through a one-to-many relationship:</p>
+            <ul>
+                <li>One book can have many orders (one-to-many)</li>
+                <li>The <code>book_id</code> in the <code>book_orders</code> table is a foreign key that references the <code>id</code> in the <code>books</code> table</li>
+            </ul>
+            
+            <div class="example">
+                <p><strong>Understanding Table Relationships:</strong></p>
+                <p>For example, book_id=1 in the book_orders table refers to the book "SQL Fundamentals" in the books table. This connection allows us to combine information from both tables using JOIN operations.</p>
+            </div>
+        </div>
+        
+        <div class="knowledge-check">
+            <h3>Database Structure Knowledge Check</h3>
+            <div class="quiz-question">
+                <p><strong>1. What column serves as the primary key in the books table?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q1"> title</label>
+                    <label><input type="radio" name="q1"> id</label>
+                    <label><input type="radio" name="q1"> author</label>
+                    <label><input type="radio" name="q1"> publication_year</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>2. What column in the book_orders table connects it to the books table?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q2"> id</label>
+                    <label><input type="radio" name="q2"> customer_id</label>
+                    <label><input type="radio" name="q2"> book_id</label>
+                    <label><input type="radio" name="q2"> order_date</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>3. What type of relationship exists between the books and book_orders tables?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q3"> One-to-one</label>
+                    <label><input type="radio" name="q3"> One-to-many</label>
+                    <label><input type="radio" name="q3"> Many-to-many</label>
+                    <label><input type="radio" name="q3"> No relationship</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="section">
+        <h2>Part 1: Basic SQL Queries</h2>
+        
+        <div class="subsection">
+            <h3>The SELECT Statement</h3>
+            <p>The SELECT statement is the most commonly used command in SQL. It allows you to retrieve data from one or more tables in a database.</p>
+            
+            <div class="key-concept">
+                <h4>Basic SELECT Syntax:</h4>
+                <pre>SELECT column1, column2, ...
+FROM table_name;</pre>
+                <p>This retrieves specific columns from a table.</p>
+                
+                <h4>To select all columns:</h4>
+                <pre>SELECT *
+FROM table_name;</pre>
+                <p>The asterisk (*) is a wildcard that represents all columns.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example 1: Selecting specific columns</h4>
+                <pre>SELECT title, author, price
+FROM books;</pre>
+                <p>This query retrieves only the title, author, and price columns from the books table.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>title</th>
+                        <th>author</th>
+                        <th>price</th>
+                    </tr>
+                    <tr>
+                        <td>SQL Fundamentals</td>
+                        <td>Jane Smith</td>
+                        <td>29.99</td>
+                    </tr>
+                    <tr>
+                        <td>Data Analysis</td>
+                        <td>John Doe</td>
+                        <td>45.99</td>
+                    </tr>
+                    <tr>
+                        <td>Database Design</td>
+                        <td>Alice Johnson</td>
+                        <td>52.50</td>
+                    </tr>
+                    <tr>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="example">
+                <h4>Example 2: Selecting all columns</h4>
+                <pre>SELECT *
+FROM books;</pre>
+                <p>This query retrieves all columns from the books table.</p>
+            </div>
+            
+            <div class="note">
+                <p><strong>Best Practice:</strong> While SELECT * is convenient for exploration, in production code it's better to specify exactly which columns you need. This improves performance and reduces network traffic.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 1.1</h4>
+                <p>Write a SQL query to retrieve the title, publication_year, and genre from the books table.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 1.2</h4>
+                <p>Write a SQL query to retrieve all information about book orders (all columns from the book_orders table).</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>Column Aliases</h3>
+            <p>Column aliases provide a way to rename columns in your result set, making output more readable or meaningful.</p>
+            
+            <div class="key-concept">
+                <h4>Alias Syntax:</h4>
+                <pre>SELECT column_name AS alias_name
+FROM table_name;</pre>
+                <p>The AS keyword is optional, but it makes queries more readable.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example: Using column aliases</h4>
+                <pre>SELECT 
+    title AS book_title,
+    price AS book_price,
+    publication_year AS year_published
+FROM books;</pre>
+                <p>This query renames the columns in the result set for better readability.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>book_title</th>
+                        <th>book_price</th>
+                        <th>year_published</th>
+                    </tr>
+                    <tr>
+                        <td>SQL Fundamentals</td>
+                        <td>29.99</td>
+                        <td>2020</td>
+                    </tr>
+                    <tr>
+                        <td>Data Analysis</td>
+                        <td>45.99</td>
+                        <td>2019</td>
+                    </tr>
+                    <tr>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 1.3</h4>
+                <p>Write a SQL query to retrieve the order_date and quantity columns from the book_orders table, but rename them to "Date of Order" and "Number of Copies" in the result.</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>DISTINCT Keyword</h3>
+            <p>The DISTINCT keyword eliminates duplicate values from the result set, showing only unique values.</p>
+            
+            <div class="key-concept">
+                <h4>DISTINCT Syntax:</h4>
+                <pre>SELECT DISTINCT column1, column2, ...
+FROM table_name;</pre>
+            </div>
+            
+            <div class="example">
+                <h4>Example: Using DISTINCT</h4>
+                <pre>SELECT DISTINCT genre
+FROM books;</pre>
+                <p>This query retrieves a list of unique genres from the books table, without duplicates.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>genre</th>
+                    </tr>
+                    <tr>
+                        <td>Education</td>
+                    </tr>
+                    <tr>
+                        <td>Fiction</td>
+                    </tr>
+                    <tr>
+                        <td>History</td>
+                    </tr>
+                    <tr>
+                        <td>Cooking</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 1.4</h4>
+                <p>Write a SQL query to find all the unique authors in the books table.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 1.5</h4>
+                <p>Write a SQL query to find all the unique publication years in the books table, ordered from oldest to newest.</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Part 2: Filtering Data with WHERE</h2>
+        
+        <div class="subsection">
+            <h3>The WHERE Clause</h3>
+            <p>The WHERE clause allows you to filter records based on specific conditions, returning only the rows that satisfy those conditions.</p>
+            
+            <div class="key-concept">
+                <h4>WHERE Syntax:</h4>
+                <pre>SELECT column1, column2, ...
+FROM table_name
+WHERE condition;</pre>
+                
+                <h4>Common Operators Used in WHERE Clauses:</h4>
+                <table>
+                    <tr>
+                        <th>Operator</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td>=</td>
+                        <td>Equal to</td>
+                        <td>genre = 'Fiction'</td>
+                    </tr>
+                    <tr>
+                        <td>></td>
+                        <td>Greater than</td>
+                        <td>price > 40</td>
+                    </tr>
+                    <tr>
+                        <td><</td>
+                        <td>Less than</td>
+                        <td>price < 30</td>
+                    </tr>
+                    <tr>
+                        <td>>=</td>
+                        <td>Greater than or equal to</td>
+                        <td>publication_year >= 2020</td>
+                    </tr>
+                    <tr>
+                        <td><=</td>
+                        <td>Less than or equal to</td>
+                        <td>page_count <= 400</td>
+                    </tr>
+                    <tr>
+                        <td>!=</td>
+                        <td>Not equal to</td>
+                        <td>genre != 'Fiction'</td>
+                    </tr>
+                    <tr>
+                        <td>BETWEEN</td>
+                        <td>Between a range (inclusive)</td>
+                        <td>price BETWEEN 20 AND 50</td>
+                    </tr>
+                    <tr>
+                        <td>LIKE</td>
+                        <td>Pattern matching with wildcards</td>
+                        <td>title LIKE 'SQL%'</td>
+                    </tr>
+                    <tr>
+                        <td>IN</td>
+                        <td>Matches any value in a list</td>
+                        <td>genre IN ('Fiction', 'History')</td>
+                    </tr>
+                    <tr>
+                        <td>IS NULL</td>
+                        <td>Is a NULL value</td>
+                        <td>publisher IS NULL</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="example">
+                <h4>Example 1: Simple comparison</h4>
+                <pre>SELECT title, price, genre
+FROM books
+WHERE price > 40;</pre>
+                <p>This query finds all books with a price greater than $40.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>title</th>
+                        <th>price</th>
+                        <th>genre</th>
+                    </tr>
+                    <tr>
+                        <td>Data Analysis</td>
+                        <td>45.99</td>
+                        <td>Education</td>
+                    </tr>
+                    <tr>
+                        <td>Database Design</td>
+                        <td>52.50</td>
+                        <td>Education</td>
+                    </tr>
+                    <tr>
+                        <td>Python for Beginners</td>
+                        <td>49.99</td>
+                        <td>Education</td>
+                    </tr>
+                    <tr>
+                        <td>Advanced SQL</td>
+                        <td>59.99</td>
+                        <td>Education</td>
+                    </tr>
+                    <tr>
+                        <td>Web Development</td>
+                        <td>47.50</td>
+                        <td>Education</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="example">
+                <h4>Example 2: Using BETWEEN</h4>
+                <pre>SELECT title, price, publication_year
+FROM books
+WHERE publication_year BETWEEN 2020 AND 2021;</pre>
+                <p>This query finds all books published in 2020 or 2021.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example 3: Using IN</h4>
+                <pre>SELECT title, author, genre
+FROM books
+WHERE genre IN ('Fiction', 'History');</pre>
+                <p>This query finds all books in either the Fiction or History genres.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example 4: Using LIKE</h4>
+                <pre>SELECT title, author
+FROM books
+WHERE title LIKE 'SQL%';</pre>
+                <p>This query finds all books with titles that start with "SQL". The % is a wildcard that matches any number of characters.</p>
+            </div>
+            
+            <div class="important">
+                <p><strong>LIKE Pattern Wildcards:</strong></p>
+                <ul>
+                    <li><code>%</code> - Matches any sequence of characters (including zero characters)</li>
+                    <li><code>_</code> - Matches exactly one character</li>
+                </ul>
+                <p>Examples:</p>
+                <ul>
+                    <li><code>LIKE 'SQL%'</code> - Starts with "SQL"</li>
+                    <li><code>LIKE '%SQL'</code> - Ends with "SQL"</li>
+                    <li><code>LIKE '%SQL%'</code> - Contains "SQL" anywhere</li>
+                    <li><code>LIKE '_ython'</code> - Second letter is 'y', followed by "thon" (matches "Python")</li>
+                </ul>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2.1 (EASY)</h4>
+                <p>Write a SQL query to find the title, price, and publication_year for all books with a price greater than $50.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2.2</h4>
+                <p>Write a SQL query to find all books published after 2020 with a price less than $30.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2.3</h4>
+                <p>Write a SQL query to find all books written by "Jane Smith" or "Alice Johnson".</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2.4</h4>
+                <p>Write a SQL query to find all books with "SQL" anywhere in the title.</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>Logical Operators</h3>
+            <p>Logical operators allow you to combine multiple conditions in a WHERE clause.</p>
+            
+            <div class="key-concept">
+                <h4>Logical Operators:</h4>
+                <ul>
+                    <li><code>AND</code> - Returns TRUE if both conditions are TRUE</li>
+                    <li><code>OR</code> - Returns TRUE if either condition is TRUE</li>
+                    <li><code>NOT</code> - Returns TRUE if the condition is FALSE</li>
+                </ul>
+            </div>
+            
+            <div class="example">
+                <h4>Example 1: Using AND</h4>
+                <pre>SELECT title, genre, price
+FROM books
+WHERE genre = 'Education' AND price > 45;</pre>
+                <p>This query finds all Education books with a price greater than $45.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example 2: Using OR</h4>
+                <pre>SELECT title, author, genre
+FROM books
+WHERE genre = 'Fiction' OR genre = 'History';</pre>
+                <p>This query finds all books in either the Fiction or History genres.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example 3: Using NOT</h4>
+                <pre>SELECT title, genre, price
+FROM books
+WHERE NOT genre = 'Education';</pre>
+                <p>This query finds all books that are not in the Education genre.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example 4: Combining AND and OR</h4>
+                <pre>SELECT title, author, price, genre
+FROM books
+WHERE (genre = 'Education' OR genre = 'History')
+AND price < 40;</pre>
+                <p>This query finds all Education or History books with a price less than $40.</p>
+                <p>Note: Parentheses are used to establish precedence in complex conditions.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2.5</h4>
+                <p>Write a SQL query to find all books published in 2021 that cost more than $45.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2.6</h4>
+                <p>Write a SQL query to find all Fiction books or books with a price less than $25.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 2.7</h4>
+                <p>Write a SQL query to find all books that are either published by "Tech Press" or written by "Jane Smith", but not both.</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Part 3: Sorting Results with ORDER BY</h2>
+        
+        <div class="subsection">
+            <h3>The ORDER BY Clause</h3>
+            <p>The ORDER BY clause sorts the result set based on specified columns, either in ascending (ASC) or descending (DESC) order.</p>
+            
+            <div class="key-concept">
+                <h4>ORDER BY Syntax:</h4>
+                <pre>SELECT column1, column2, ...
+FROM table_name
+ORDER BY column1 [ASC|DESC], column2 [ASC|DESC], ...;</pre>
+                
+                <p>By default, ORDER BY sorts in ascending order (ASC). You need to specify DESC for descending order.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example 1: Basic sorting</h4>
+                <pre>SELECT title, price
+FROM books
+ORDER BY price DESC;</pre>
+                <p>This query retrieves all books sorted by price from highest to lowest.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>title</th>
+                        <th>price</th>
+                    </tr>
+                    <tr>
+                        <td>Advanced SQL</td>
+                        <td>59.99</td>
+                    </tr>
+                    <tr>
+                        <td>Database Design</td>
+                        <td>52.50</td>
+                    </tr>
+                    <tr>
+                        <td>Python for Beginners</td>
+                        <td>49.99</td>
+                    </tr>
+                    <tr>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="example">
+                <h4>Example 2: Multiple columns sorting</h4>
+                <pre>SELECT title, author, publication_year
+FROM books
+ORDER BY publication_year ASC, title ASC;</pre>
+                <p>This query sorts books first by publication year (oldest to newest), and then alphabetically by title for books published in the same year.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example 3: Sorting by column position</h4>
+                <pre>SELECT title, price, publication_year
+FROM books
+ORDER BY 2 DESC;</pre>
+                <p>This query sorts by the second column in the SELECT list (price) in descending order. However, using column positions is not recommended for production code as it makes queries harder to maintain.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 3.1</h4>
+                <p>Write a SQL query to retrieve all books, ordered by author name alphabetically.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 3.2</h4>
+                <p>Write a SQL query to find the title, genre, and price of all books, sorted by genre alphabetically and then by price from highest to lowest.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 3.3 (HARD)</h4>
+                <p>Write a SQL query to find all book orders, showing the title, order_date, and quantity. Sort the results by order_date from newest to oldest. (Hint: You'll need to use JOIN which we'll cover in the next section).</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="knowledge-check">
+            <h3>Basic SQL Knowledge Check</h3>
+            <div class="quiz-question">
+                <p><strong>1. Which SQL clause is used to filter rows?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q4"> SELECT</label>
+                    <label><input type="radio" name="q4"> FROM</label>
+                    <label><input type="radio" name="q4"> WHERE</label>
+                    <label><input type="radio" name="q4"> ORDER BY</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>2. What does the DISTINCT keyword do?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q5"> Sorts the results</label>
+                    <label><input type="radio" name="q5"> Filters the results</label>
+                    <label><input type="radio" name="q5"> Removes duplicate values from the results</label>
+                    <label><input type="radio" name="q5"> Joins tables together</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>3. What is the default sort order when using ORDER BY?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q6"> Ascending (ASC)</label>
+                    <label><input type="radio" name="q6"> Descending (DESC)</label>
+                    <label><input type="radio" name="q6"> Alphabetical</label>
+                    <label><input type="radio" name="q6"> No default order</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>4. Which wildcard matches any number of characters in a LIKE pattern?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q7"> *</label>
+                    <label><input type="radio" name="q7"> ?</label>
+                    <label><input type="radio" name="q7"> %</label>
+                    <label><input type="radio" name="q7"> _</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>5. Which operator would you use to find all books with prices between $30 and $50?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q8"> IN</label>
+                    <label><input type="radio" name="q8"> LIKE</label>
+                    <label><input type="radio" name="q8"> BETWEEN</label>
+                    <label><input type="radio" name="q8"> IS</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="section">
+        <h2>Part 4: Joining Tables</h2>
+        
+        <div class="subsection">
+            <h3>Introduction to JOINs</h3>
+            <p>In relational databases, data is often spread across multiple tables to minimize redundancy and improve data integrity. JOINs allow you to combine data from multiple tables based on related columns.</p>
+            
+            <div class="key-concept">
+                <h4>The Need for JOINs:</h4>
+                <p>Consider our database: book information is in the <code>books</code> table, while order information is in the <code>book_orders</code> table. If we want to see which books were ordered and their details, we need to join these tables.</p>
+                
+                <p>The <code>book_id</code> column in <code>book_orders</code> references the <code>id</code> column in <code>books</code>, creating a relationship between the tables.</p>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>Types of JOINs</h3>
+            <p>SQL supports several types of JOINs, each with specific behaviors:</p>
+            
+            <div class="key-concept">
+                <h4>Main JOIN Types:</h4>
+                <ul>
+                    <li><strong>INNER JOIN</strong>: Returns only matching rows from both tables</li>
+                    <li><strong>LEFT JOIN</strong> (or LEFT OUTER JOIN): Returns all rows from the left table and matching rows from the right table</li>
+                    <li><strong>RIGHT JOIN</strong> (or RIGHT OUTER JOIN): Returns all rows from the right table and matching rows from the left table</li>
+                    <li><strong>FULL JOIN</strong> (or FULL OUTER JOIN): Returns all rows when there's a match in either table</li>
+                </ul>
+            </div>
+            
+            <div class="example">
+                <h4>Visual Representation of JOINs:</h4>
+                <p style="text-align: center;"><strong>INNER JOIN</strong> returns only the intersection</p>
+                <pre style="text-align: center;">
+    Table A         Table B
+    ┌───┐           ┌───┐
+    │   │           │   │
+    │ ┌─┼───┐   ┌───┼─┐ │
+    │ │ │   │   │   │ │ │
+    └─┼─┘   │   │   └─┼─┘
+      │     └───┘     │
+      └───────────────┘
+        Returned rows
+                </pre>
+                
+                <p style="text-align: center;"><strong>LEFT JOIN</strong> returns all from A, plus matching from B</p>
+                <pre style="text-align: center;">
+    Table A         Table B
+    ┌───┐           ┌───┐
+    │   │           │   │
+    │ ┌─┼───┐   ┌───┼─┐ │
+    │ │ │   │   │   │ │ │
+    └─┼─┘   │   │   └─┼─┘
+      │     └───┘     │
+      └───────────────┘
+        Returned rows
+                </pre>
+                
+                <p style="text-align: center;"><strong>RIGHT JOIN</strong> returns all from B, plus matching from A</p>
+                <pre style="text-align: center;">
+    Table A         Table B
+    ┌───┐           ┌───┐
+    │   │           │   │
+    │ ┌─┼───┐   ┌───┼─┐ │
+    │ │ │   │   │   │ │ │
+    └─┼─┘   │   │   └─┼─┘
+      │     └───┘     │
+      └───────────────┘
+        Returned rows
+                </pre>
+                
+                <p style="text-align: center;"><strong>FULL JOIN</strong> returns all rows from both tables</p>
+                <pre style="text-align: center;">
+    Table A         Table B
+    ┌───┐           ┌───┐
+    │   │           │   │
+    │ ┌─┼───┐   ┌───┼─┐ │
+    │ │ │   │   │   │ │ │
+    └─┼─┘   │   │   └─┼─┘
+      │     └───┘     │
+      └───────────────┘
+        Returned rows
+                </pre>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>INNER JOIN</h3>
+            <p>The INNER JOIN returns only the rows where there's a match in both tables based on the specified join condition.</p>
+            
+            <div class="key-concept">
+                <h4>INNER JOIN Syntax:</h4>
+                <pre>SELECT columns
+FROM table1
+INNER JOIN table2 ON table1.column = table2.column;</pre>
+            </div>
+            
+            <div class="example">
+                <h4>Example: Finding book details for all orders</h4>
+                <pre>SELECT bo.id AS order_id, b.title, bo.order_date, bo.quantity
+FROM book_orders bo
+INNER JOIN books b ON bo.book_id = b.id;</pre>
+                <p>This query joins the <code>book_orders</code> and <code>books</code> tables to show which books were ordered, including the order date and quantity.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>order_id</th>
+                        <th>title</th>
+                        <th>order_date</th>
+                        <th>quantity</th>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>SQL Fundamentals</td>
+                        <td>2023-01-15</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Database Design</td>
+                        <td>2023-01-16</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Data Analysis</td>
+                        <td>2023-01-20</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                </table>
+                
+                <p><strong>How this works:</strong></p>
+                <ol>
+                    <li>For each row in <code>book_orders</code>, the database finds matching rows in <code>books</code> where <code>book_orders.book_id = books.id</code></li>
+                    <li>Only rows that have matches in both tables are included in the result</li>
+                    <li>The result combines data from both tables</li>
+                </ol>
+            </div>
+            
+            <div class="note">
+                <p><strong>Note:</strong> The word "INNER" is optional. Simply writing "JOIN" defaults to an INNER JOIN.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 4.1 (EASY/MEDIUM)</h4>
+                <p>Write a SQL query to find the title, order_date, and quantity for each book order.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 4.2</h4>
+                <p>Write a SQL query to show the title, author, genre, and payment_method for all book orders.</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>LEFT JOIN</h3>
+            <p>The LEFT JOIN returns all rows from the left table and matching rows from the right table. If there's no match, NULL values are returned for columns from the right table.</p>
+            
+            <div class="key-concept">
+                <h4>LEFT JOIN Syntax:</h4>
+                <pre>SELECT columns
+FROM table1
+LEFT JOIN table2 ON table1.column = table2.column;</pre>
+            </div>
+            
+            <div class="example">
+                <h4>Example: Finding all books and their orders (if any)</h4>
+                <pre>SELECT b.title, bo.order_date, bo.quantity
+FROM books b
+LEFT JOIN book_orders bo ON b.id = bo.book_id;</pre>
+                <p>This query retrieves all books from the <code>books</code> table and any matching orders from the <code>book_orders</code> table. Books without orders will have NULL values for <code>order_date</code> and <code>quantity</code>.</p>
+                
+                <p>Partial result (showing books with and without orders):</p>
+                <table>
+                    <tr>
+                        <th>title</th>
+                        <th>order_date</th>
+                        <th>quantity</th>
+                    </tr>
+                    <tr>
+                        <td>SQL Fundamentals</td>
+                        <td>2023-01-15</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>SQL Fundamentals</td>
+                        <td>2023-02-10</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>Data Analysis</td>
+                        <td>2023-01-20</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>Data Analysis</td>
+                        <td>2023-02-22</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>Web Development</td>
+                        <td>NULL</td>
+                        <td>NULL</td>
+                    </tr>
+                    <tr>
+                        <td>...</td>
+                        <td>...</td>
+                        <td>...</td>
+                    </tr>
+                </table>
+                
+                <p><strong>How this works:</strong></p>
+                <ol>
+                    <li>All rows from the left table (<code>books</code>) are included</li>
+                    <li>For each book, matching orders are included (if any exist)</li>
+                    <li>Books without any orders still appear, but with NULL values for the order columns</li>
+                </ol>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 4.3</h4>
+                <p>Write a SQL query to list all books and their order quantities if ordered. Include books that have never been ordered (with NULL quantity).</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>Table Aliases</h3>
+            <p>Table aliases provide shorthand names for tables in a query, making it easier to write and read, especially for complex queries with multiple joins.</p>
+            
+            <div class="key-concept">
+                <h4>Table Alias Syntax:</h4>
+                <pre>SELECT columns
+FROM table_name AS alias_name;</pre>
+                <p>As with column aliases, the AS keyword is optional.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example: Using table aliases</h4>
+                <pre>SELECT b.title, a.name AS author_name
+FROM books b
+JOIN authors a ON b.author_id = a.id;</pre>
+                <p>In this example (assuming an authors table), "b" is an alias for the books table and "a" is an alias for the authors table.</p>
+            </div>
+            
+            <div class="note">
+                <p><strong>Best Practice:</strong> Use meaningful aliases that reflect the table name (like "b" for books, "bo" for book_orders). This makes your queries more readable and maintainable.</p>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>Joining with WHERE Conditions</h3>
+            <p>You can combine JOINs with WHERE clauses to filter the joined data.</p>
+            
+            <div class="example">
+                <h4>Example: Find orders for books with a price greater than $40</h4>
+                <pre>SELECT b.title, bo.order_date, bo.quantity, b.price
+FROM book_orders bo
+JOIN books b ON bo.book_id = b.id
+WHERE b.price > 40;</pre>
+                
+                <p>This query joins the tables and then filters to show only orders for books priced above $40.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 4.4 (MEDIUM)</h4>
+                <p>Write a SQL query to find the title, order_date, and quantity for all book orders where the book price is greater than $40.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 4.5</h4>
+                <p>Write a SQL query to find all Fiction books that have been ordered, showing the title, author, order_date, and shipping_status.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 4.6 (HARD)</h4>
+                <p>Write a SQL query to find the title, order_date, and quantity for all book orders where the book price is greater than $20. Order the results by order_date in descending order (newest first).</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="knowledge-check">
+            <h3>JOINs Knowledge Check</h3>
+            <div class="quiz-question">
+                <p><strong>1. Which JOIN type returns only the matching rows from both tables?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q9"> LEFT JOIN</label>
+                    <label><input type="radio" name="q9"> RIGHT JOIN</label>
+                    <label><input type="radio" name="q9"> INNER JOIN</label>
+                    <label><input type="radio" name="q9"> FULL JOIN</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>2. If a book has no orders, will it appear in the result of this query?</strong></p>
+                <pre>SELECT b.title, bo.order_date
+FROM books b
+LEFT JOIN book_orders bo ON b.id = bo.book_id;</pre>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q10"> No, it won't appear</label>
+                    <label><input type="radio" name="q10"> Yes, with NULL for order_date</label>
+                    <label><input type="radio" name="q10"> Yes, with a default date</label>
+                    <label><input type="radio" name="q10"> It depends on the database system</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>3. What does "b" and "bo" represent in the following query?</strong></p>
+                <pre>SELECT b.title, bo.quantity
+FROM books b
+JOIN book_orders bo ON b.id = bo.book_id;</pre>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q11"> Column names</label>
+                    <label><input type="radio" name="q11"> Table aliases</label>
+                    <label><input type="radio" name="q11"> Database names</label>
+                    <label><input type="radio" name="q11"> SQL functions</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="section">
+        <h2>Part 5: Aggregate Functions and GROUP BY</h2>
+        
+        <div class="subsection">
+            <h3>Aggregate Functions</h3>
+            <p>Aggregate functions perform calculations on a set of values and return a single value. They're used to summarize data.</p>
+            
+            <div class="key-concept">
+                <h4>Common Aggregate Functions:</h4>
+                <table>
+                    <tr>
+                        <th>Function</th>
+                        <th>Description</th>
+                        <th>Example</th>
+                    </tr>
+                    <tr>
+                        <td>COUNT()</td>
+                        <td>Counts the number of rows</td>
+                        <td>COUNT(*) or COUNT(column)</td>
+                    </tr>
+                    <tr>
+                        <td>SUM()</td>
+                        <td>Calculates the sum of values</td>
+                        <td>SUM(price)</td>
+                    </tr>
+                    <tr>
+                        <td>AVG()</td>
+                        <td>Calculates the average of values</td>
+                        <td>AVG(price)</td>
+                    </tr>
+                    <tr>
+                        <td>MIN()</td>
+                        <td>Finds the minimum value</td>
+                        <td>MIN(price)</td>
+                    </tr>
+                    <tr>
+                        <td>MAX()</td>
+                        <td>Finds the maximum value</td>
+                        <td>MAX(price)</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="example">
+                <h4>Example 1: Counting records</h4>
+                <pre>SELECT COUNT(*) AS total_books
+FROM books;</pre>
+                <p>This query counts the total number of books in the database.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>total_books</th>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="example">
+                <h4>Example 2: Multiple aggregates</h4>
+                <pre>SELECT 
+    COUNT(*) AS book_count,
+    AVG(price) AS average_price,
+    MIN(price) AS lowest_price,
+    MAX(price) AS highest_price,
+    SUM(price) AS total_value
+FROM books;</pre>
+                <p>This query calculates multiple statistics about book prices in a single query.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>book_count</th>
+                        <th>average_price</th>
+                        <th>lowest_price</th>
+                        <th>highest_price</th>
+                        <th>total_value</th>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>37.39</td>
+                        <td>19.99</td>
+                        <td>59.99</td>
+                        <td>373.89</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="important">
+                <p>When using aggregate functions without GROUP BY, they operate on the entire result set, returning a single row.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 5.1</h4>
+                <p>Write a SQL query to find the total number of books ordered (sum of all quantities) from the book_orders table.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 5.2</h4>
+                <p>Write a SQL query to find the average price of all Education books.</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>The GROUP BY Clause</h3>
+            <p>The GROUP BY clause divides the result set into groups based on specified column values, allowing aggregate functions to operate on each group separately.</p>
+            
+            <div class="key-concept">
+                <h4>GROUP BY Syntax:</h4>
+                <pre>SELECT column1, aggregate_function(column2)
+FROM table_name
+GROUP BY column1;</pre>
+                
+                <h4>What GROUP BY does:</h4>
+                <ol>
+                    <li>Groups rows that have the same values in the specified column(s)</li>
+                    <li>Returns one row for each group</li>
+                    <li>Allows aggregate functions to be applied to each group independently</li>
+                </ol>
+                
+                <div class="important">
+                    <p><strong>Important Rule:</strong> When using GROUP BY, columns in the SELECT clause must either:</p>
+                    <ul>
+                        <li>Be included in the GROUP BY clause, OR</li>
+                        <li>Be used within an aggregate function</li>
+                    </ul>
+                    <p>This is because non-aggregated columns must have a single value per group.</p>
+                </div>
+            </div>
+            
+            <div class="example">
+                <h4>Example 1: Simple GROUP BY</h4>
+                <pre>SELECT genre, COUNT(*) AS book_count
+FROM books
+GROUP BY genre;</pre>
+                <p>This query counts how many books are in each genre.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>genre</th>
+                        <th>book_count</th>
+                    </tr>
+                    <tr>
+                        <td>Education</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>Fiction</td>
+                        <td>2</td>
+                    </tr>
+                    <tr>
+                        <td>History</td>
+                        <td>1</td>
+                    </tr>
+                    <tr>
+                        <td>Cooking</td>
+                        <td>1</td>
+                    </tr>
+                </table>
+                
+                <p><strong>How this works:</strong></p>
+                <ol>
+                    <li>The database groups rows with the same genre value</li>
+                    <li>The COUNT(*) function counts how many rows are in each group</li>
+                    <li>One row is returned for each unique genre</li>
+                </ol>
+            </div>
+            
+            <div class="example">
+                <h4>Example 2: GROUP BY with multiple aggregates</h4>
+                <pre>SELECT 
+    publication_year, 
+    COUNT(*) AS book_count,
+    AVG(price) AS average_price,
+    MIN(price) AS lowest_price,
+    MAX(price) AS highest_price
+FROM books
+GROUP BY publication_year
+ORDER BY publication_year;</pre>
+                <p>This query groups books by publication year and calculates various statistics for each year.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>publication_year</th>
+                        <th>book_count</th>
+                        <th>average_price</th>
+                        <th>lowest_price</th>
+                        <th>highest_price</th>
+                    </tr>
+                    <tr>
+                        <td>2019</td>
+                        <td>2</td>
+                        <td>35.49</td>
+                        <td>24.99</td>
+                        <td>45.99</td>
+                    </tr>
+                    <tr>
+                        <td>2020</td>
+                        <td>3</td>
+                        <td>39.16</td>
+                        <td>29.99</td>
+                        <td>47.50</td>
+                    </tr>
+                    <tr>
+                        <td>2021</td>
+                        <td>3</td>
+                        <td>41.81</td>
+                        <td>22.95</td>
+                        <td>52.50</td>
+                    </tr>
+                    <tr>
+                        <td>2022</td>
+                        <td>2</td>
+                        <td>39.99</td>
+                        <td>19.99</td>
+                        <td>59.99</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="example">
+                <h4>Example 3: GROUP BY with JOIN</h4>
+                <pre>SELECT 
+    b.genre, 
+    COUNT(bo.id) AS total_orders,
+    SUM(bo.quantity) AS books_sold
+FROM books b
+JOIN book_orders bo ON b.id = bo.book_id
+GROUP BY b.genre
+ORDER BY books_sold DESC;</pre>
+                <p>This query joins the books and book_orders tables, then groups the results by genre to find which genres have the most orders and total books sold.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>genre</th>
+                        <th>total_orders</th>
+                        <th>books_sold</th>
+                    </tr>
+                    <tr>
+                        <td>Education</td>
+                        <td>8</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>History</td>
+                        <td>2</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>Fiction</td>
+                        <td>3</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>Cooking</td>
+                        <td>1</td>
+                        <td>3</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 5.3</h4>
+                <p>Write a SQL query to count how many books were published by each author. Show the author name and the count.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 5.4</h4>
+                <p>Write a SQL query to find the total number of books ordered for each payment method. Show the payment method and the total quantity.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 5.5 (HARD)</h4>
+                <p>Write a SQL query to group books by publication_year, and report the publication_year, average price, and number of books for each year. Order the results by publication_year in ascending order.</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="subsection">
+            <h3>The HAVING Clause</h3>
+            <p>While the WHERE clause filters individual rows before grouping, the HAVING clause filters groups after the GROUP BY has been applied.</p>
+            
+            <div class="key-concept">
+                <h4>HAVING Syntax:</h4>
+                <pre>SELECT column1, aggregate_function(column2)
+FROM table_name
+GROUP BY column1
+HAVING condition;</pre>
+                
+                <p>The condition in the HAVING clause typically involves an aggregate function.</p>
+            </div>
+            
+            <div class="example">
+                <h4>Example: Find genres with more than one book</h4>
+                <pre>SELECT genre, COUNT(*) AS book_count
+FROM books
+GROUP BY genre
+HAVING COUNT(*) > 1;</pre>
+                <p>This query groups books by genre, but only shows genres that have more than one book.</p>
+                
+                <p>Result:</p>
+                <table>
+                    <tr>
+                        <th>genre</th>
+                        <th>book_count</th>
+                    </tr>
+                    <tr>
+                        <td>Education</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>Fiction</td>
+                        <td>2</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="important">
+                <h4>WHERE vs. HAVING:</h4>
+                <ul>
+                    <li><strong>WHERE</strong> filters rows before they are grouped</li>
+                    <li><strong>HAVING</strong> filters groups after the GROUP BY is applied</li>
+                </ul>
+                <p>Both can be used in the same query:</p>
+                <pre>SELECT column1, aggregate_function(column2)
+FROM table_name
+WHERE condition1
+GROUP BY column1
+HAVING condition2;</pre>
+            </div>
+            
+            <div class="example">
+                <h4>Example: Combining WHERE and HAVING</h4>
+                <pre>SELECT 
+    author, 
+    COUNT(*) AS book_count, 
+    AVG(price) AS avg_price
+FROM books
+WHERE publication_year > 2019
+GROUP BY author
+HAVING COUNT(*) > 1;</pre>
+                <p>This query finds authors who have written multiple books published after 2019.</p>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 5.6</h4>
+                <p>Write a SQL query to find authors who have written more than one book. Show the author name and the count of books.</p>
+                <div class="answer-space"></div>
+            </div>
+            
+            <div class="exercise">
+                <h4>Exercise 5.7 (HARD)</h4>
+                <p>Write a SQL query to find genres where the average book price is greater than $40. Show the genre and average price.</p>
+                <div class="answer-space"></div>
+            </div>
+        </div>
+        
+        <div class="knowledge-check">
+            <h3>GROUP BY Knowledge Check</h3>
+            <div class="quiz-question">
+                <p><strong>1. What does the GROUP BY clause do in SQL?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q12"> Sorts the result set</label>
+                    <label><input type="radio" name="q12"> Filters rows before retrieving data</label>
+                    <label><input type="radio" name="q12"> Divides rows into groups and allows aggregate functions on each group</label>
+                    <label><input type="radio" name="q12"> Joins multiple tables together</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>2. Which of the following is NOT an aggregate function?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q13"> COUNT()</label>
+                    <label><input type="radio" name="q13"> GROUP BY</label>
+                    <label><input type="radio" name="q13"> AVG()</label>
+                    <label><input type="radio" name="q13"> SUM()</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>3. What's the difference between WHERE and HAVING?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q14"> They are identical and can be used interchangeably</label>
+                    <label><input type="radio" name="q14"> WHERE filters individual rows, HAVING filters groups</label>
+                    <label><input type="radio" name="q14"> WHERE is used with JOINs, HAVING is used with GROUP BY</label>
+                    <label><input type="radio" name="q14"> WHERE can use aggregate functions, HAVING cannot</label>
+                </div>
+            </div>
+            
+            <div class="quiz-question">
+                <p><strong>4. Which clause should be used to find all genres that have more than 2 books?</strong></p>
+                <div class="quiz-options">
+                    <label><input type="radio" name="q15"> WHERE COUNT(*) > 2</label>
+                    <label><input type="radio" name="q15"> HAVING COUNT(*) > 2</label>
+                    <label><input type="radio" name="q15"> GROUP BY COUNT(*) > 2</label>
+                    <label><input type="radio" name="q15"> ON COUNT(*) > 2</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Comprehensive Exercises</h2>
+        
+        <div class="exercise">
+            <h4>Exercise 6.1: Basic SELECT with WHERE and ORDER BY</h4>
+            <p>Write a SQL query to find all books published after 2020 with a price greater than $30, ordered by price from highest to lowest.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h4>Exercise 6.2: JOINs</h4>
+            <p>Write a SQL query to list all books and their order information (order_date, quantity, shipping_status) for orders placed in February 2023. Include books that weren't ordered in this period (with NULL values).</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h4>Exercise 6.3: GROUP BY with aggregation</h4>
+            <p>Write a SQL query to find the total sales amount for each genre. The sales amount is calculated by multiplying the book price by the order quantity. Show the genre and total sales, ordered by total sales in descending order.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h4>Exercise 6.4: Advanced GROUP BY (HARD)</h4>
+            <p>For each publisher, find the number of books, the average price, and the number of total orders received. Only include publishers with more than 1 book. Sort the results by the number of orders in descending order.</p>
+            <div class="answer-space"></div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Answer Key</h2>
+        
+        <h3>Part 5 Exercises:</h3>
+        
+        <h4>Exercise 5.1:</h4>
+        <pre>SELECT SUM(quantity) AS total_books_ordered
+FROM book_orders;</pre>
+        
+        <h4>Exercise 5.2:</h4>
+        <pre>SELECT AVG(price) AS average_price
+FROM books
+WHERE genre = 'Education';</pre>
+        
+        <h4>Exercise 5.3:</h4>
+        <pre>SELECT author, COUNT(*) AS book_count
+FROM books
+GROUP BY author;</pre>
+        
+        <h4>Exercise 5.4:</h4>
+        <pre>SELECT payment_method, SUM(quantity) AS total_quantity
+FROM book_orders
+GROUP BY payment_method;</pre>
+        
+        <h4>Exercise 5.5:</h4>
+        <pre>SELECT publication_year, AVG(price) AS average_price, COUNT(*) AS number_books
+FROM books
+GROUP BY publication_year
+ORDER BY publication_year ASC;</pre>
+        
+        <h4>Exercise 5.6:</h4>
+        <pre>SELECT author, COUNT(*) AS book_count
+FROM books
+GROUP BY author
+HAVING COUNT(*) > 1;</pre>
+        
+        <h4>Exercise 5.7:</h4>
+        <pre>SELECT genre, AVG(price) AS avg_price
+FROM books
+GROUP BY genre
+HAVING AVG(price) > 40;</pre>
+        
+        <h3>Comprehensive Exercises:</h3>
+        
+        <h4>Exercise 6.1:</h4>
+        <pre>SELECT title, price, publication_year
+FROM books
+WHERE publication_year > 2020 AND price > 30
+ORDER BY price DESC;</pre>
+        
+        <h4>Exercise 6.2:</h4>
+        <pre>SELECT b.title, bo.order_date, bo.quantity, bo.shipping_status
+FROM books b
+LEFT JOIN book_orders bo ON b.id = bo.book_id 
+AND bo.order_date BETWEEN '2023-02-01' AND '2023-02-28';</pre>
+        
+        <h4>Exercise 6.3:</h4>
+        <pre>SELECT b.genre, SUM(b.price * bo.quantity) AS total_sales
+FROM books b
+JOIN book_orders bo ON b.id = bo.book_id
+GROUP BY b.genre
+ORDER BY total_sales DESC;</pre>
+        
+        <h4>Exercise 6.4:</h4>
+        <pre>SELECT b.publisher, 
+       COUNT(DISTINCT b.id) AS num_books, 
+       AVG(b.price) AS avg_price,
+       COUNT(bo.id) AS total_orders
+FROM books b
+LEFT JOIN book_orders bo ON b.id = bo.book_id
+GROUP BY b.publisher
+HAVING COUNT(DISTINCT b.id) > 1
+ORDER BY total_orders DESC;</pre>
+    </div>
+    
+    <div class="no-print">
+        <p>This worksheet was created for educational purposes. All content is designed to teach SQL from basics to GROUP BY operations.</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SQL Lesson</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 25px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .exercise {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            margin: 20px 0;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-family: Consolas, monospace;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .answer-space {
+            border: 1px dashed #ccc;
+            padding: 15px;
+            min-height: 50px;
+            margin-top: 10px;
+        }
+        @media print {
+            body {
+                font-size: 12pt;
+            }
+            .no-print {
+                display: none;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="no-print">
+        <button onclick="window.print()">Print Worksheet</button>
+    </div>
+
+    <h1>SQL Beginner to GROUP BY - Worksheet</h1>
+    
+    <div class="section">
+        <h2>Introduction to SQL</h2>
+        <p>SQL (Structured Query Language) is used to communicate with databases. It allows you to create, read, update, and delete data stored in relational databases.</p>
+        
+        <h3>Database Basics</h3>
+        <p>A database contains <strong>tables</strong>, which store data in rows and columns (similar to spreadsheets). Each table typically represents an entity (like books, customers, or orders).</p>
+        
+        <h3>For this worksheet, we'll use two tables:</h3>
+        
+        <h4>books table:</h4>
+        <table>
+            <tr>
+                <th>id</th>
+                <th>title</th>
+                <th>author</th>
+                <th>price</th>
+                <th>publication_year</th>
+                <th>genre</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>SQL Fundamentals</td>
+                <td>Jane Smith</td>
+                <td>29.99</td>
+                <td>2020</td>
+                <td>Education</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Data Analysis</td>
+                <td>John Doe</td>
+                <td>45.99</td>
+                <td>2019</td>
+                <td>Education</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>Database Design</td>
+                <td>Alice Johnson</td>
+                <td>52.50</td>
+                <td>2021</td>
+                <td>Education</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>Mystery at Midnight</td>
+                <td>Robert Brown</td>
+                <td>19.99</td>
+                <td>2022</td>
+                <td>Fiction</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>The History of Data</td>
+                <td>Jane Smith</td>
+                <td>39.99</td>
+                <td>2020</td>
+                <td>History</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>Python for Beginners</td>
+                <td>Alice Johnson</td>
+                <td>49.99</td>
+                <td>2021</td>
+                <td>Education</td>
+            </tr>
+        </table>
+        
+        <h4>book_orders table:</h4>
+        <table>
+            <tr>
+                <th>id</th>
+                <th>book_id</th>
+                <th>customer_id</th>
+                <th>order_date</th>
+                <th>quantity</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td>1</td>
+                <td>101</td>
+                <td>2023-01-15</td>
+                <td>2</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>3</td>
+                <td>102</td>
+                <td>2023-01-16</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td>2</td>
+                <td>101</td>
+                <td>2023-01-20</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td>5</td>
+                <td>103</td>
+                <td>2023-01-25</td>
+                <td>3</td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td>4</td>
+                <td>104</td>
+                <td>2023-02-01</td>
+                <td>2</td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td>6</td>
+                <td>102</td>
+                <td>2023-02-03</td>
+                <td>1</td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td>1</td>
+                <td>103</td>
+                <td>2023-02-10</td>
+                <td>1</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>Part 1: Basic SELECT Statements</h2>
+        
+        <p>The SELECT statement is used to retrieve data from a database. The basic syntax is:</p>
+        <pre>SELECT column1, column2, ... FROM table_name;</pre>
+        
+        <p>To select all columns, you can use the asterisk (*):</p>
+        <pre>SELECT * FROM table_name;</pre>
+        
+        <div class="exercise">
+            <h3>Exercise 1</h3>
+            <p>Write a SQL query to select all columns from the books table.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 2</h3>
+            <p>Write a SQL query to select only the title and price columns from the books table.</p>
+            <div class="answer-space"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Part 2: Filtering with WHERE</h2>
+        
+        <p>The WHERE clause allows you to filter records based on specific conditions:</p>
+        <pre>SELECT column1, column2, ... FROM table_name WHERE condition;</pre>
+        
+        <p>Common operators in WHERE clauses:</p>
+        <ul>
+            <li><code>=</code> Equal to</li>
+            <li><code>></code> Greater than</li>
+            <li><code><</code> Less than</li>
+            <li><code>>=</code> Greater than or equal to</li>
+            <li><code><=</code> Less than or equal to</li>
+            <li><code>!=</code> or <code><></code> Not equal to</li>
+            <li><code>LIKE</code> Pattern matching with wildcards</li>
+            <li><code>IN</code> Matches any value in a list</li>
+        </ul>
+        
+        <div class="exercise">
+            <h3>Exercise 3</h3>
+            <p>Write a SQL query to find all books with a price greater than $40.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 4</h3>
+            <p>Write a SQL query to find all books published in 2021.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 5 (EASY)</h3>
+            <p>Write a SQL query to find the title, price, and publication_year for all books with a price greater than $50.</p>
+            <div class="answer-space"></div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="section">
+        <h2>Part 3: Sorting with ORDER BY</h2>
+        
+        <p>The ORDER BY clause is used to sort the result set:</p>
+        <pre>SELECT column1, column2, ... FROM table_name ORDER BY column1 [ASC|DESC];</pre>
+        
+        <p>You can sort in ascending (ASC, the default) or descending (DESC) order.</p>
+        
+        <div class="exercise">
+            <h3>Exercise 6</h3>
+            <p>Write a SQL query to select all books, ordered by price from highest to lowest.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 7</h3>
+            <p>Write a SQL query to select all books, ordered by publication_year (ascending) and then by title (alphabetically).</p>
+            <div class="answer-space"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Part 4: Joining Tables</h2>
+        
+        <p>JOIN clauses are used to combine rows from two or more tables based on a related column:</p>
+        <pre>SELECT columns FROM table1 JOIN table2 ON table1.column = table2.column;</pre>
+        
+        <p>Common types of JOINs:</p>
+        <ul>
+            <li><code>INNER JOIN</code>: Returns records with matching values in both tables</li>
+            <li><code>LEFT JOIN</code>: Returns all records from the left table and matching records from the right table</li>
+            <li><code>RIGHT JOIN</code>: Returns all records from the right table and matching records from the left table</li>
+        </ul>
+        
+        <div class="exercise">
+            <h3>Exercise 8 (EASY/MEDIUM)</h3>
+            <p>Write a SQL query to find the title, order_date, and quantity for each book order using an INNER JOIN.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 9 (MEDIUM)</h3>
+            <p>Write a SQL query to find the title, order_date, and quantity for all book orders where the book price is greater than $40.</p>
+            <div class="answer-space"></div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="section">
+        <h2>Part 5: Aggregate Functions</h2>
+        
+        <p>Aggregate functions perform calculations on a set of values and return a single value:</p>
+        <ul>
+            <li><code>COUNT()</code>: Counts the number of rows</li>
+            <li><code>SUM()</code>: Calculates the sum of values</li>
+            <li><code>AVG()</code>: Calculates the average of values</li>
+            <li><code>MIN()</code>: Finds the minimum value</li>
+            <li><code>MAX()</code>: Finds the maximum value</li>
+        </ul>
+        
+        <div class="exercise">
+            <h3>Exercise 10</h3>
+            <p>Write a SQL query to count the total number of books in the database.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 11</h3>
+            <p>Write a SQL query to find the average price of all books.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 12</h3>
+            <p>Write a SQL query to find the total quantity of books ordered.</p>
+            <div class="answer-space"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Part 6: GROUP BY Clause</h2>
+        
+        <p>The GROUP BY clause groups rows with the same values into summary rows, often used with aggregate functions:</p>
+        <pre>SELECT column1, aggregate_function(column2) FROM table_name GROUP BY column1;</pre>
+        
+        <div class="exercise">
+            <h3>Exercise 13</h3>
+            <p>Write a SQL query to count how many books were published in each year.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 14</h3>
+            <p>Write a SQL query to find the total number of books ordered for each book title.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 15 (HARD)</h3>
+            <p>Write a SQL query to group books by publication_year, and report the publication_year, average price, and number of books for each year. Order the results by publication_year in ascending order.</p>
+            <div class="answer-space"></div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Part 7: HAVING Clause</h2>
+        
+        <p>The HAVING clause is used to filter groups based on a specified condition:</p>
+        <pre>SELECT column1, aggregate_function(column2) FROM table_name GROUP BY column1 HAVING condition;</pre>
+        
+        <div class="exercise">
+            <h3>Exercise 16</h3>
+            <p>Write a SQL query to find authors who have written more than one book. Show the author name and the count of books.</p>
+            <div class="answer-space"></div>
+        </div>
+        
+        <div class="exercise">
+            <h3>Exercise 17 (HARD)</h3>
+            <p>Write a SQL query to find genres where the average book price is greater than $40. Show the genre and average price.</p>
+            <div class="answer-space"></div>
+        </div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <div class="section">
+        <h2>Answer Key</h2>
+        
+        <h3>Exercise 1:</h3>
+        <pre>SELECT * FROM books;</pre>
+        
+        <h3>Exercise 2:</h3>
+        <pre>SELECT title, price FROM books;</pre>
+        
+        <h3>Exercise 3:</h3>
+        <pre>SELECT * FROM books WHERE price > 40;</pre>
+        
+        <h3>Exercise 4:</h3>
+        <pre>SELECT * FROM books WHERE publication_year = 2021;</pre>
+        
+        <h3>Exercise 5:</h3>
+        <pre>SELECT title, price, publication_year
+FROM books
+WHERE price > 50;</pre>
+        
+        <h3>Exercise 6:</h3>
+        <pre>SELECT * FROM books ORDER BY price DESC;</pre>
+        
+        <h3>Exercise 7:</h3>
+        <pre>SELECT * FROM books ORDER BY publication_year ASC, title ASC;</pre>
+        
+        <h3>Exercise 8:</h3>
+        <pre>SELECT b.title, bo.order_date, bo.quantity
+FROM book_orders AS bo
+JOIN books AS b ON bo.book_id = b.id;</pre>
+        
+        <h3>Exercise 9:</h3>
+        <pre>SELECT b.title, bo.order_date, bo.quantity
+FROM book_orders bo
+JOIN books b ON bo.book_id = b.id
+WHERE b.price > 40;</pre>
+        
+        <h3>Exercise 10:</h3>
+        <pre>SELECT COUNT(*) FROM books;</pre>
+        
+        <h3>Exercise 11:</h3>
+        <pre>SELECT AVG(price) FROM books;</pre>
+        
+        <h3>Exercise 12:</h3>
+        <pre>SELECT SUM(quantity) FROM book_orders;</pre>
+        
+        <h3>Exercise 13:</h3>
+        <pre>SELECT publication_year, COUNT(*) AS book_count
+FROM books
+GROUP BY publication_year;</pre>
+        
+        <h3>Exercise 14:</h3>
+        <pre>SELECT b.title, SUM(bo.quantity) AS total_ordered
+FROM books b
+JOIN book_orders bo ON b.id = bo.book_id
+GROUP BY b.title;</pre>
+        
+        <h3>Exercise 15:</h3>
+        <pre>SELECT publication_year, AVG(price) AS average_price, COUNT(*) AS number_books
+FROM books
+GROUP BY publication_year
+ORDER BY publication_year ASC;</pre>
+        
+        <h3>Exercise 16:</h3>
+        <pre>SELECT author, COUNT(*) AS book_count
+FROM books
+GROUP BY author
+HAVING COUNT(*) > 1;</pre>
+        
+        <h3>Exercise 17:</h3>
+        <pre>SELECT genre, AVG(price) AS avg_price
+FROM books
+GROUP BY genre
+HAVING AVG(price) > 40;</pre>
+        
+        <h3>Bonus Challenge (HARD):</h3>
+        <pre>SELECT b.title, bo.order_date, bo.quantity
+FROM book_orders bo
+JOIN books b ON bo.book_id = b.id
+WHERE b.price > 20
+ORDER BY bo.order_date DESC;</pre>
+    </div>
+
+    <div class="no-print">
+        <p>This worksheet was created for educational purposes. All content is designed to teach SQL from basics to GROUP BY operations.</p>
+    </div>
+</body>
+</html>
