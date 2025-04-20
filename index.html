@@ -422,25 +422,21 @@
     </style>
 </head>
 <body>
+    <!-- Navigation Bar - Simplified -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="#">
-                <i class="fas fa-database me-2"></i>SQL Learning Quiz
+                <i class="fas fa-database me-2"></i>SQL Query Builder
             </a>
-            <div class="d-flex">
-                <button id="reset-quiz" class="btn btn-outline-light btn-sm me-2">
-                    <i class="fas fa-redo me-1"></i>Reset Quiz
-                </button>
-                <button id="toggle-builder" class="btn btn-outline-light btn-sm">
-                    <i class="fas fa-tools me-1"></i>Query Builder
-                </button>
-            </div>
+            <button id="reset-builder" class="btn btn-outline-light btn-sm">
+                <i class="fas fa-undo me-1"></i>Reset Builder
+            </button>
         </div>
     </nav>
 
     <div class="container mt-4">
-        <!-- SQL Query Builder Section -->
-        <div id="sql-builder-section" class="sql-builder-container" style="display: none;">
+        <!-- SQL Query Builder Section - Now Main Focus -->
+        <div id="sql-builder-section" class="sql-builder-container">
             <h4 class="mb-3">
                 <i class="fas fa-tools me-2"></i>SQL Query Builder
             </h4>
@@ -454,6 +450,9 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="where-tab" data-bs-toggle="tab" href="#where-content">WHERE</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="group-tab" data-bs-toggle="tab" href="#group-content">GROUP BY</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="order-tab" data-bs-toggle="tab" href="#order-content">ORDER BY</a>
@@ -515,6 +514,22 @@
                     </div>
                 </div>
                 
+                <!-- GROUP BY Tab -->
+                <div class="tab-pane fade" id="group-content">
+                    <div class="builder-section">
+                        <label>Group By Column(s):</label>
+                        <div id="group-columns" class="builder-columns">
+                            <!-- Columns will be populated based on selected table -->
+                        </div>
+                    </div>
+                    
+                    <div class="builder-section">
+                        <label>Having Condition:</label>
+                        <input type="text" id="having-condition" class="form-control" 
+                               placeholder="e.g., COUNT(*) > 5">
+                    </div>
+                </div>
+                
                 <!-- ORDER BY Tab -->
                 <div class="tab-pane fade" id="order-content">
                     <div class="builder-section">
@@ -534,46 +549,15 @@
             
             <div class="sql-preview" id="sql-preview">SELECT * FROM table</div>
             
-            <div class="d-flex justify-content-between mt-3">
-                <button id="reset-builder" class="btn btn-secondary">
-                    <i class="fas fa-undo me-1"></i>Reset
-                </button>
+            <div class="d-flex justify-content-end mt-3">
                 <button id="run-builder-query" class="btn btn-success">
                     <i class="fas fa-play me-1"></i>Run Query
                 </button>
             </div>
         </div>
 
-        <!-- Quiz Section -->
-        <div class="row">
+        <div class="row mt-4">
             <div class="col-md-8">
-                <div class="progress">
-                    <div id="progress-bar" class="progress-bar bg-primary" role="progressbar" style="width: 0%"></div>
-                </div>
-                
-                <div class="quiz-area">
-                    <div class="question-header">
-                        <h4 class="question-title">Loading questions...</h4>
-                        <span class="question-counter">0/0</span>
-                    </div>
-                    
-                    <div id="question-content">
-                        <!-- Question content will be loaded here -->
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mt-4">
-                        <button id="prev-btn" class="btn btn-secondary" disabled>
-                            <i class="fas fa-arrow-left me-1"></i>Previous
-                        </button>
-                        <button id="check-answer-btn" class="btn btn-primary">
-                            Check Answer<i class="fas fa-check ms-1"></i>
-                        </button>
-                        <button id="next-btn" class="btn btn-primary" disabled>
-                            Next<i class="fas fa-arrow-right ms-1"></i>
-                        </button>
-                    </div>
-                </div>
-                
                 <div class="results-area">
                     <h4 class="mb-3">
                         <i class="fas fa-chart-bar me-2"></i>Results
@@ -610,7 +594,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Toast container for notifications -->
     <div class="toast-container"></div>
 
@@ -627,34 +611,40 @@
                 // Create a database
                 const db = new SQL.Database();
                 
-                // Initialize the application
-                const app = new SQLQuizApp(db);
-                app.initialize();
+                // Setup the database
+                setupDatabase(db);
                 
                 // Initialize the query builder
-                const builder = new SQLQueryBuilder(db, app);
+                const builder = new SQLQueryBuilder(db);
                 builder.initialize();
+                
+                // Display schema
+                displayDatabaseSchema(db);
+                
+                // Display relationship diagram
+                displayRelationshipDiagram();
+                
             }).catch(err => {
                 showToast('Error initializing SQL database: ' + err.message, 'danger');
             });
 
             // SQLQueryBuilder class
             class SQLQueryBuilder {
-                constructor(db, app) {
+                constructor(db) {
                     this.db = db;
-                    this.app = app;
                     this.selectedTable = '';
                     this.selectedColumns = [];
                     this.joinType = 'INNER JOIN';
                     this.joinTable = '';
                     this.joinCondition = '';
                     this.whereCondition = '';
+                    this.groupColumns = [];
+                    this.havingCondition = '';
                     this.orderColumn = '';
                     this.orderDirection = 'ASC';
                     
                     // Builder elements
                     this.builderSection = document.getElementById('sql-builder-section');
-                    this.toggleBtn = document.getElementById('toggle-builder');
                     this.resetBtn = document.getElementById('reset-builder');
                     this.runBtn = document.getElementById('run-builder-query');
                     
@@ -670,26 +660,23 @@
                     // WHERE tab elements
                     this.whereConditionEl = document.getElementById('where-condition');
                     
+                    // GROUP BY tab elements
+                    this.groupColumnsEl = document.getElementById('group-columns');
+                    this.havingConditionEl = document.getElementById('having-condition');
+                    
                     // ORDER BY tab elements
                     this.orderColumnEl = document.getElementById('order-column');
                     this.orderDirectionEl = document.getElementById('order-direction');
                     
                     // SQL preview element
                     this.sqlPreviewEl = document.getElementById('sql-preview');
+                    
+                    // Results elements
+                    this.resultsContent = document.getElementById('results-content');
+                    this.chartContainer = document.getElementById('chart-container');
                 }
                 
                 initialize() {
-                    // Toggle builder visibility
-                    this.toggleBtn.addEventListener('click', () => {
-                        if (this.builderSection.style.display === 'none') {
-                            this.builderSection.style.display = 'block';
-                            this.populateTables();
-                            this.updateSqlPreview();
-                        } else {
-                            this.builderSection.style.display = 'none';
-                        }
-                    });
-                    
                     // Reset builder
                     this.resetBtn.addEventListener('click', () => {
                         this.resetBuilder();
@@ -727,6 +714,11 @@
                         this.updateSqlPreview();
                     });
                     
+                    this.havingConditionEl.addEventListener('input', () => {
+                        this.havingCondition = this.havingConditionEl.value;
+                        this.updateSqlPreview();
+                    });
+                    
                     this.orderColumnEl.addEventListener('input', () => {
                         this.orderColumn = this.orderColumnEl.value;
                         this.updateSqlPreview();
@@ -736,6 +728,9 @@
                         this.orderDirection = this.orderDirectionEl.value;
                         this.updateSqlPreview();
                     });
+                    
+                    // Populate tables on initialization
+                    this.populateTables();
                 }
                 
                 populateTables() {
@@ -771,7 +766,9 @@
                 populateColumns() {
                     // Clear existing columns
                     this.selectColumnsEl.innerHTML = '';
+                    this.groupColumnsEl.innerHTML = '';
                     this.selectedColumns = [];
+                    this.groupColumns = [];
                     
                     if (!this.selectedTable) return;
                     
@@ -779,12 +776,12 @@
                     try {
                         const pragma = this.db.exec(`PRAGMA table_info(${this.selectedTable})`)[0];
                         
-                        // Create a clickable option for each column
+                        // Create a clickable option for each column - SELECT columns
                         pragma.values.forEach(col => {
                             const colName = col[1];
                             const colType = col[2];
                             
-                            // Create column option element
+                            // Create column option element for SELECT
                             const columnEl = document.createElement('div');
                             columnEl.className = 'column-option';
                             columnEl.dataset.column = `${this.selectedTable}.${colName}`;
@@ -806,6 +803,101 @@
                             });
                             
                             this.selectColumnsEl.appendChild(columnEl);
+                            
+                            // Create column option element for GROUP BY
+                            const groupColumnEl = document.createElement('div');
+                            groupColumnEl.className = 'column-option';
+                            groupColumnEl.dataset.column = `${this.selectedTable}.${colName}`;
+                            groupColumnEl.textContent = `${this.selectedTable}.${colName}`;
+                            
+                            // Add click event to toggle group by selection
+                            groupColumnEl.addEventListener('click', () => {
+                                groupColumnEl.classList.toggle('selected');
+                                
+                                if (groupColumnEl.classList.contains('selected')) {
+                                    this.groupColumns.push(`${this.selectedTable}.${colName}`);
+                                } else {
+                                    this.groupColumns = this.groupColumns.filter(
+                                        col => col !== `${this.selectedTable}.${colName}`
+                                    );
+                                }
+                                
+                                this.updateSqlPreview();
+                            });
+                            
+                            this.groupColumnsEl.appendChild(groupColumnEl);
+                        });
+                        
+                        // Add aggregate function options for SELECT
+                        const aggregateFunctions = [
+                            'COUNT(*)',
+                            'SUM',
+                            'AVG',
+                            'MIN',
+                            'MAX'
+                        ];
+                        
+                        const aggregateHeader = document.createElement('div');
+                        aggregateHeader.className = 'mt-3 mb-2 fw-bold';
+                        aggregateHeader.textContent = 'Aggregate Functions:';
+                        this.selectColumnsEl.appendChild(aggregateHeader);
+                        
+                        aggregateFunctions.forEach(func => {
+                            if (func === 'COUNT(*)') {
+                                const countOption = document.createElement('div');
+                                countOption.className = 'column-option';
+                                countOption.dataset.column = func;
+                                countOption.textContent = func;
+                                
+                                countOption.addEventListener('click', () => {
+                                    countOption.classList.toggle('selected');
+                                    
+                                    if (countOption.classList.contains('selected')) {
+                                        this.selectedColumns.push(func);
+                                    } else {
+                                        this.selectedColumns = this.selectedColumns.filter(
+                                            col => col !== func
+                                        );
+                                    }
+                                    
+                                    this.updateSqlPreview();
+                                });
+                                
+                                this.selectColumnsEl.appendChild(countOption);
+                            } else {
+                                pragma.values.forEach(col => {
+                                    const colName = col[1];
+                                    const colType = col[2];
+                                    
+                                    // Only show aggregate functions for numeric columns
+                                    if (colType.includes('INT') || colType.includes('REAL') || 
+                                        colType.includes('FLOAT') || colType.includes('DOUBLE') || 
+                                        colType.includes('NUMERIC')) {
+                                        
+                                        const funcOption = document.createElement('div');
+                                        funcOption.className = 'column-option';
+                                        const funcText = `${func}(${this.selectedTable}.${colName})`;
+                                        funcOption.dataset.column = funcText;
+                                        funcOption.textContent = funcText;
+                                        
+                                        funcOption.addEventListener('click', () => {
+                                            funcOption.classList.toggle('selected');
+                                            
+                                            if (funcOption.classList.contains('selected')) {
+                                                this.selectedColumns.push(funcText);
+                                            } else {
+                                                this.selectedColumns = this.selectedColumns.filter(
+                                                    col => col !== funcText
+                                                );
+                                            }
+                                            
+                                            this.updateSqlPreview();
+                                        });
+                                        
+                                        this.selectColumnsEl.appendChild(funcOption);
+                                    }
+                                });
+                            }
                         });
                     } catch (error) {
                         console.error('Error fetching columns:', error);
@@ -839,6 +931,16 @@
                         sql += `\nWHERE ${this.whereCondition}`;
                     }
                     
+                    // Add GROUP BY clause
+                    if (this.groupColumns.length > 0) {
+                        sql += `\nGROUP BY ${this.groupColumns.join(', ')}`;
+                        
+                        // Add HAVING clause
+                        if (this.havingCondition) {
+                            sql += `\nHAVING ${this.havingCondition}`;
+                        }
+                    }
+                    
                     // Add ORDER BY clause
                     if (this.orderColumn) {
                         sql += `\nORDER BY ${this.orderColumn} ${this.orderDirection}`;
@@ -856,21 +958,35 @@
                     this.joinTable = '';
                     this.joinCondition = '';
                     this.whereCondition = '';
+                    this.groupColumns = [];
+                    this.havingCondition = '';
                     this.orderColumn = '';
                     this.orderDirection = 'ASC';
                     
                     // Reset form controls
                     this.selectTableEl.value = '';
                     this.selectColumnsEl.innerHTML = '';
+                    this.groupColumnsEl.innerHTML = '';
                     this.joinTypeEl.value = 'INNER JOIN';
                     this.joinTableEl.value = '';
                     this.joinConditionEl.value = '';
                     this.whereConditionEl.value = '';
+                    this.havingConditionEl.value = '';
                     this.orderColumnEl.value = '';
                     this.orderDirectionEl.value = 'ASC';
                     
                     // Update SQL preview
                     this.updateSqlPreview();
+                    
+                    // Clear results
+                    this.resultsContent.innerHTML = `
+                        <div class="alert alert-info">
+                            Results will appear here after you run a query.
+                        </div>
+                    `;
+                    
+                    // Clear chart
+                    this.chartContainer.innerHTML = '';
                 }
                 
                 runQuery() {
@@ -883,1183 +999,10 @@
                     
                     try {
                         // Execute the query and display results
-                        this.app.executeQueryAndDisplay(sql);
+                        this.executeQueryAndDisplay(sql);
                         showToast('Query executed successfully', 'success');
                     } catch (error) {
                         showToast(`Error executing query: ${error.message}`, 'danger');
-                    }
-                }
-            }
-            
-            // Create and manage the quiz app
-            class SQLQuizApp {
-                constructor(db) {
-                    this.db = db;
-                    this.questions = [];
-                    this.questionOrder = []; // To store randomized question order
-                    this.currentQuestionIndex = 0;
-                    this.userAnswers = [];
-                    this.score = 0;
-                    this.answeredQuestions = new Set(); // Track which questions have been answered
-                    
-                    // DOM elements
-                    this.questionTitle = document.querySelector('.question-title');
-                    this.questionCounter = document.querySelector('.question-counter');
-                    this.questionContent = document.getElementById('question-content');
-                    this.resultsContent = document.getElementById('results-content');
-                    this.chartContainer = document.getElementById('chart-container');
-                    this.schemaTablesContainer = document.getElementById('schema-tables');
-                    this.progressBar = document.getElementById('progress-bar');
-                    
-                    // Buttons
-                    this.prevBtn = document.getElementById('prev-btn');
-                    this.nextBtn = document.getElementById('next-btn');
-                    this.checkAnswerBtn = document.getElementById('check-answer-btn');
-                    this.resetBtn = document.getElementById('reset-quiz');
-                    
-                    // Event listeners
-                    this.prevBtn.addEventListener('click', () => this.navigateQuestion(-1));
-                    this.nextBtn.addEventListener('click', () => this.navigateQuestion(1));
-                    this.checkAnswerBtn.addEventListener('click', () => this.checkAnswer());
-                    this.resetBtn.addEventListener('click', () => this.resetQuiz());
-                }
-                
-                initialize() {
-                    // Setup database
-                    this.setupDatabase();
-                    
-                    // Load questions
-                    this.setupQuestions();
-                    
-                    // Randomize questions
-                    this.randomizeQuestions();
-                    
-                    // Display schema
-                    this.displayDatabaseSchema();
-                    
-                    // Display relationship diagram
-                    this.displayRelationshipDiagram();
-                    
-                    // Show first question
-                    this.displayQuestion();
-                    
-                    // Update progress bar
-                    this.updateProgress();
-                }
-
-                randomizeQuestions() {
-                    // Create an array of indices and shuffle it
-                    this.questionOrder = [...Array(this.questions.length).keys()];
-                    this.shuffleArray(this.questionOrder);
-                    
-                    // Initialize user answers array based on randomized order
-                    this.userAnswers = new Array(this.questions.length).fill(null);
-                }
-                
-                // Fisher-Yates shuffle algorithm
-                shuffleArray(array) {
-                    for (let i = array.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [array[i], array[j]] = [array[j], array[i]];
-                    }
-                }
-                
-                setupDatabase() {
-                    // Create customers table
-                    this.db.run(`
-                        CREATE TABLE customers (
-                            customer_id INTEGER PRIMARY KEY,
-                            first_name TEXT,
-                            last_name TEXT,
-                            email TEXT,
-                            city TEXT,
-                            state TEXT,
-                            country TEXT,
-                            registration_date TEXT
-                        )
-                    `);
-                    
-                    // Insert sample customers
-                    const customerData = [
-                        [1, 'John', 'Smith', 'john.smith@example.com', 'New York', 'NY', 'USA', '2022-01-15'],
-                        [2, 'Emily', 'Johnson', 'emily.j@example.com', 'Toronto', 'ON', 'Canada', '2022-02-20'],
-                        [3, 'Michael', 'Williams', 'michael.w@example.com', 'Chicago', 'IL', 'USA', '2022-03-10'],
-                        [4, 'Sophia', 'Brown', 'sophia.b@example.com', 'London', 'UK', 'UK', '2022-01-05'],
-                        [5, 'Daniel', 'Jones', 'daniel.j@example.com', 'Sydney', 'NSW', 'Australia', '2022-04-12'],
-                        [6, 'Olivia', 'Garcia', 'olivia.g@example.com', 'Madrid', 'MD', 'Spain', '2022-02-28'],
-                        [7, 'James', 'Miller', 'james.m@example.com', 'Los Angeles', 'CA', 'USA', '2022-05-17'],
-                        [8, 'Emma', 'Davis', 'emma.d@example.com', 'Vancouver', 'BC', 'Canada', '2022-06-23']
-                    ];
-                    
-                    customerData.forEach(customer => {
-                        this.db.run(
-                            'INSERT INTO customers VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                            customer
-                        );
-                    });
-                    
-                    // Create products table
-                    this.db.run(`
-                        CREATE TABLE products (
-                            product_id INTEGER PRIMARY KEY,
-                            product_name TEXT,
-                            category TEXT,
-                            price REAL,
-                            stock_quantity INTEGER
-                        )
-                    `);
-                    
-                    // Insert sample products
-                    const productData = [
-                        [1, 'Laptop Pro', 'Electronics', 1299.99, 50],
-                        [2, 'Smartphone X', 'Electronics', 899.99, 100],
-                        [3, 'Wireless Headphones', 'Electronics', 199.99, 75],
-                        [4, 'Designer T-shirt', 'Clothing', 49.99, 200],
-                        [5, 'Premium Jeans', 'Clothing', 89.99, 150],
-                        [6, 'Running Shoes', 'Footwear', 129.99, 80],
-                        [7, 'Coffee Table', 'Furniture', 249.99, 30],
-                        [8, 'Desk Chair', 'Furniture', 179.99, 40],
-                        [9, 'Blender', 'Kitchen', 89.99, 60],
-                        [10, 'Toaster', 'Kitchen', 59.99, 70]
-                    ];
-                    
-                    productData.forEach(product => {
-                        this.db.run(
-                            'INSERT INTO products VALUES (?, ?, ?, ?, ?)',
-                            product
-                        );
-                    });
-                    
-                    // Create orders table
-                    this.db.run(`
-                        CREATE TABLE orders (
-                            order_id INTEGER PRIMARY KEY,
-                            customer_id INTEGER,
-                            order_date TEXT,
-                            total_amount REAL,
-                            status TEXT,
-                            FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
-                        )
-                    `);
-                    
-                    // Insert sample orders
-                    const orderData = [
-                        [1, 1, '2023-01-10', 1349.98, 'Delivered'],
-                        [2, 2, '2023-01-15', 899.99, 'Delivered'],
-                        [3, 3, '2023-02-05', 279.98, 'Shipped'],
-                        [4, 4, '2023-02-10', 129.99, 'Delivered'],
-                        [5, 5, '2023-02-20', 429.98, 'Processing'],
-                        [6, 1, '2023-03-05', 139.98, 'Delivered'],
-                        [7, 2, '2023-03-15', 249.99, 'Shipped'],
-                        [8, 6, '2023-03-20', 159.98, 'Processing'],
-                        [9, 7, '2023-04-10', 1099.98, 'Delivered'],
-                        [10, 8, '2023-04-12', 229.98, 'Pending'],
-                        [11, 3, '2023-05-05', 149.99, 'Shipped'],
-                        [12, 4, '2023-05-10', 249.99, 'Delivered']
-                    ];
-                    
-                    orderData.forEach(order => {
-                        this.db.run(
-                            'INSERT INTO orders VALUES (?, ?, ?, ?, ?)',
-                            order
-                        );
-                    });
-                    
-                    // Create order_items table
-                    this.db.run(`
-                        CREATE TABLE order_items (
-                            order_item_id INTEGER PRIMARY KEY,
-                            order_id INTEGER,
-                            product_id INTEGER,
-                            quantity INTEGER,
-                            unit_price REAL,
-                            FOREIGN KEY (order_id) REFERENCES orders(order_id),
-                            FOREIGN KEY (product_id) REFERENCES products(product_id)
-                        )
-                    `);
-                    
-                    // Insert sample order items
-                    const orderItemData = [
-                        [1, 1, 1, 1, 1299.99],
-                        [2, 1, 4, 1, 49.99],
-                        [3, 2, 2, 1, 899.99],
-                        [4, 3, 3, 1, 199.99],
-                        [5, 3, 4, 2, 39.99],
-                        [6, 4, 6, 1, 129.99],
-                        [7, 5, 7, 1, 249.99],
-                        [8, 5, 8, 1, 179.99],
-                        [9, 6, 4, 2, 49.99],
-                        [10, 6, 5, 1, 39.99],
-                        [11, 7, 7, 1, 249.99],
-                        [12, 8, 4, 2, 49.99],
-                        [13, 8, 6, 1, 59.99],
-                        [14, 9, 1, 1, 999.99],
-                        [15, 9, 2, 1, 99.99],
-                        [16, 10, 9, 1, 89.99],
-                        [17, 10, 10, 1, 139.99],
-                        [18, 11, 3, 1, 149.99],
-                        [19, 12, 7, 1, 249.99]
-                    ];
-                    
-                    orderItemData.forEach(item => {
-                        this.db.run(
-                            'INSERT INTO order_items VALUES (?, ?, ?, ?, ?)',
-                            item
-                        );
-                    });
-                    
-                    // Create employees table
-                    this.db.run(`
-                        CREATE TABLE employees (
-                            employee_id INTEGER PRIMARY KEY,
-                            first_name TEXT,
-                            last_name TEXT,
-                            department TEXT,
-                            salary REAL,
-                            hire_date TEXT
-                        )
-                    `);
-                    
-                    // Insert sample employees
-                    const employeeData = [
-                        [1, 'Robert', 'Anderson', 'Sales', 65000, '2021-01-15'],
-                        [2, 'Jennifer', 'Thomas', 'Marketing', 72000, '2021-02-10'],
-                        [3, 'William', 'Jackson', 'Sales', 68000, '2021-03-05'],
-                        [4, 'Elizabeth', 'White', 'IT', 85000, '2021-01-20'],
-                        [5, 'David', 'Harris', 'Finance', 78000, '2021-04-12'],
-                        [6, 'Maria', 'Martin', 'HR', 62000, '2021-05-20'],
-                        [7, 'Joseph', 'Thompson', 'IT', 88000, '2021-02-15'],
-                        [8, 'Susan', 'Garcia', 'Marketing', 69000, '2021-06-10']
-                    ];
-                    
-                    employeeData.forEach(employee => {
-                        this.db.run(
-                            'INSERT INTO employees VALUES (?, ?, ?, ?, ?, ?)',
-                            employee
-                        );
-                    });
-                    
-                    // Create books table for the query builder example
-                    this.db.run(`
-                        CREATE TABLE books (
-                            id INTEGER PRIMARY KEY,
-                            title TEXT,
-                            price REAL,
-                            publication_year INTEGER,
-                            author_id INTEGER
-                        )
-                    `);
-                    
-                    // Insert sample books
-                    const bookData = [
-                        [1, 'SQL Fundamentals', 29.99, 2020, 1],
-                        [2, 'Advanced SQL', 49.99, 2021, 1],
-                        [3, 'Database Design', 39.99, 2019, 2],
-                        [4, 'Web Development Basics', 24.99, 2022, 3],
-                        [5, 'Python Programming', 34.99, 2021, 4],
-                        [6, 'JavaScript Mastery', 44.99, 2022, 3],
-                        [7, 'Data Science Essentials', 54.99, 2020, 5],
-                        [8, 'Machine Learning', 59.99, 2021, 5]
-                    ];
-                    
-                    bookData.forEach(book => {
-                        this.db.run(
-                            'INSERT INTO books VALUES (?, ?, ?, ?, ?)',
-                            book
-                        );
-                    });
-                    
-                    // Create book_orders table
-                    this.db.run(`
-                        CREATE TABLE book_orders (
-                            id INTEGER PRIMARY KEY,
-                            book_id INTEGER,
-                            quantity INTEGER,
-                            order_date TEXT,
-                            FOREIGN KEY (book_id) REFERENCES books(id)
-                        )
-                    `);
-                    
-                    // Insert sample book orders
-                    const bookOrdersData = [
-                        [1, 1, 3, '2023-01-15'],
-                        [2, 2, 1, '2023-01-20'],
-                        [3, 3, 2, '2023-02-05'],
-                        [4, 4, 1, '2023-02-10'],
-                        [5, 5, 4, '2023-03-15'],
-                        [6, 6, 2, '2023-03-20'],
-                        [7, 1, 1, '2023-04-10'],
-                        [8, 2, 2, '2023-04-15'],
-                        [9, 7, 3, '2023-05-05'],
-                        [10, 8, 1, '2023-05-10']
-                    ];
-                    
-                    bookOrdersData.forEach(order => {
-                        this.db.run(
-                            'INSERT INTO book_orders VALUES (?, ?, ?, ?)',
-                            order
-                        );
-                    });
-                }
-                
-                setupQuestions() {
-                    this.questions = [
-                        {
-                            id: 1,
-                            title: "Simple Selection",
-                            description: "Retrieve all customers from the United States.",
-                            level: "easy",
-                            type: "multiple-choice",
-                            options: [
-                                "SELECT * FROM customers WHERE country = 'USA';",
-                                "SELECT * FROM customers WHERE country = 'United States';",
-                                "SELECT * FROM customers WHERE country LIKE '%USA%';",
-                                "SELECT * FROM customers WHERE state IN ('NY', 'CA', 'IL');"
-                            ],
-                            correctAnswer: 0,
-                            explanation: "To select all customers from a specific country, we use the WHERE clause with the exact country name."
-                        },
-                        {
-                            id: 2,
-                            title: "Ordering Results",
-                            description: "Sort products by price from highest to lowest.",
-                            level: "easy",
-                            type: "drag-drop",
-                            segments: [
-                                "SELECT *",
-                                "FROM products",
-                                "ORDER BY price",
-                                "DESC"
-                            ],
-                            correctOrder: [0, 1, 2, 3],
-                            explanation: "To sort results in descending order, we use ORDER BY followed by the column name and the DESC keyword."
-                        },
-                        {
-                            id: 3,
-                            title: "Counting Results",
-                            description: "Count how many customers are from each country.",
-                            level: "medium",
-                            type: "fill-in-blanks",
-                            template: "SELECT [blank1] FROM customers [blank2] BY country;",
-                            blanks: {
-                                blank1: ["country, COUNT(*)", "country", "COUNT(*)", "COUNT(country)"],
-                                blank2: ["GROUP", "ORDER", "SORT", "FILTER"]
-                            },
-                            correctAnswers: {
-                                blank1: "country, COUNT(*)",
-                                blank2: "GROUP"
-                            },
-                            explanation: "To count items by group, we use the COUNT() aggregate function with GROUP BY clause."
-                        },
-                        {
-                            id: 4,
-                            title: "Basic JOIN",
-                            description: "Retrieve customer names along with their order information.",
-                            level: "medium",
-                            type: "build-query",
-                            segments: [
-                                {type: "static", value: "SELECT"},
-                                {type: "select", options: ["*", "c.first_name, c.last_name, o.order_id, o.order_date", "customers.*, orders.*", "c.customer_id, o.order_id"]},
-                                {type: "static", value: "FROM"},
-                                {type: "select", options: ["customers", "orders", "products", "order_items"]},
-                                {type: "static", value: "c"},
-                                {type: "select", options: ["JOIN", "INNER JOIN", "LEFT JOIN", "RIGHT JOIN"]},
-                                {type: "select", options: ["customers", "orders", "products", "order_items"]},
-                                {type: "static", value: "o ON c.customer_id = o.customer_id;"}
-                            ],
-                            correctAnswers: [1, 0, 1, 1],
-                            explanation: "To join two tables, we need to specify the columns we want, the tables to join, and the condition on which to join them."
-                        },
-                        {
-                            id: 5,
-                            title: "Filtering with Multiple Conditions",
-                            description: "Find all orders that were placed in the first quarter of 2023 (Jan-Mar) and have a total amount greater than $200.",
-                            level: "medium",
-                            type: "multiple-choice",
-                            options: [
-                                "SELECT * FROM orders WHERE order_date BETWEEN '2023-01-01' AND '2023-03-31' AND total_amount > 200;",
-                                "SELECT * FROM orders WHERE order_date >= '2023-01-01' AND order_date <= '2023-03-31' AND total_amount > 200;",
-                                "SELECT * FROM orders WHERE (order_date >= '2023-01-01' AND order_date <= '2023-03-31') OR total_amount > 200;",
-                                "SELECT * FROM orders WHERE EXTRACT(MONTH FROM order_date) IN (1, 2, 3) AND YEAR(order_date) = 2023 AND total_amount > 200;"
-                            ],
-                            correctAnswer: 0,
-                            explanation: "To filter with multiple conditions, we use the AND operator to combine them. The BETWEEN operator is a concise way to specify a range of dates."
-                        },
-                        {
-                            id: 6,
-                            title: "Aggregate Functions",
-                            description: "Calculate the average, minimum, and maximum product price for each category.",
-                            level: "hard",
-                            type: "build-query",
-                            segments: [
-                                {type: "static", value: "SELECT"},
-                                {type: "select", options: ["*", "category", "category, price", "category, AVG(price), MIN(price), MAX(price)"]},
-                                {type: "static", value: "FROM"},
-                                {type: "select", options: ["customers", "products", "orders", "employees"]},
-                                {type: "static", value: "GROUP BY"},
-                                {type: "select", options: ["product_id", "category", "price", "stock_quantity"]}
-                            ],
-                            correctAnswers: [3, 1, 1],
-                            explanation: "To calculate aggregate values by group, we use aggregate functions (AVG, MIN, MAX) with the GROUP BY clause."
-                        },
-                        {
-                            id: 7,
-                            title: "Subquery",
-                            description: "Find all products that cost more than the average product price.",
-                            level: "hard",
-                            type: "multiple-choice",
-                            options: [
-                                "SELECT * FROM products WHERE price > (SELECT AVG(price) FROM products);",
-                                "SELECT * FROM products WHERE price > AVG(price);",
-                                "SELECT * FROM products p1 WHERE p1.price > (SELECT AVG(p2.price) FROM products p2);",
-                                "SELECT p.* FROM products p, (SELECT AVG(price) as avg_price FROM products) a WHERE p.price > a.avg_price;"
-                            ],
-                            correctAnswer: 0,
-                            explanation: "To compare with an aggregate value, we often use a subquery that calculates that aggregate value. In this case, we're finding products with prices greater than the average price."
-                        },
-                        {
-                            id: 8,
-                            title: "HAVING Clause",
-                            description: "Find departments that have more than 1 employee.",
-                            level: "hard",
-                            type: "drag-drop",
-                            segments: [
-                                "SELECT department, COUNT(*) as employee_count",
-                                "FROM employees",
-                                "GROUP BY department",
-                                "HAVING COUNT(*) > 1"
-                            ],
-                            correctOrder: [0, 1, 2, 3],
-                            explanation: "The HAVING clause is used to filter groups after the GROUP BY clause, while WHERE filters rows before grouping."
-                        },
-                        {
-                            id: 9,
-                            title: "Joining Multiple Tables",
-                            description: "Retrieve product names and quantities that customers have ordered.",
-                            level: "hard",
-                            type: "fill-in-blanks",
-                            template: "SELECT c.first_name, c.last_name, p.product_name, oi.quantity FROM customers c JOIN [blank1] o ON c.customer_id = o.customer_id JOIN [blank2] oi ON o.order_id = oi.order_id JOIN [blank3] p ON oi.product_id = p.product_id;",
-                            blanks: {
-                                blank1: ["orders", "products", "order_items", "employees"],
-                                blank2: ["orders", "products", "order_items", "employees"],
-                                blank3: ["orders", "products", "order_items", "employees"]
-                            },
-                            correctAnswers: {
-                                blank1: "orders",
-                                blank2: "order_items",
-                                blank3: "products"
-                            },
-                            explanation: "To join multiple tables, we create a chain of JOIN clauses, each with its own ON condition that links to the appropriate tables."
-                        },
-                        {
-                            id: 10,
-                            title: "Order Status Pivot",
-                            description: "Create a pivot table showing the count of orders by status.",
-                            level: "hard",
-                            type: "multiple-choice",
-                            options: [
-                                "SELECT COUNT(CASE WHEN status = 'Pending' THEN 1 END) as Pending, COUNT(CASE WHEN status = 'Processing' THEN 1 END) as Processing, COUNT(CASE WHEN status = 'Shipped' THEN 1 END) as Shipped, COUNT(CASE WHEN status = 'Delivered' THEN 1 END) as Delivered FROM orders;",
-                                "SELECT status, COUNT(*) FROM orders GROUP BY status;",
-                                "SELECT PIVOT(COUNT(*) FOR status IN ('Pending', 'Processing', 'Shipped', 'Delivered')) FROM orders;",
-                                "SELECT * FROM orders PIVOT(COUNT(*) FOR status IN (Pending, Processing, Shipped, Delivered));"
-                            ],
-                            correctAnswer: 0,
-                            explanation: "In SQL, pivot tables are often created using CASE expressions with aggregate functions. This transforms row values into columns."
-                        }
-                    ];
-                }
-                
-                displayDatabaseSchema() {
-                    // Get tables from the database
-                    const tables = this.db.exec("SELECT name FROM sqlite_master WHERE type='table'")[0].values;
-                    
-                    // Create HTML for each table
-                    const schemaHtml = tables.map(table => {
-                        const tableName = table[0];
-                        
-                        // Get table columns
-                        const pragma = this.db.exec(`PRAGMA table_info(${tableName})`)[0];
-                        
-                        // Create HTML for the table schema
-                        let html = `
-                            <div class="schema-table">
-                                <div class="schema-table-header" data-table="${tableName}">
-                                    <i class="fas fa-table me-2"></i>${tableName}
-                                    <i class="fas fa-chevron-down float-end"></i>
-                                </div>
-                                <div class="schema-table-content" id="schema-${tableName}">
-                                    <table class="table table-sm">
-                                        <thead>
-                                            <tr>
-                                                <th>Column</th>
-                                                <th>Type</th>
-                                                <th>PK</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                        `;
-                        
-                        // Add rows for each column
-                        pragma.values.forEach(col => {
-                            const colName = col[1];
-                            const colType = col[2];
-                            const isPK = col[5] === 1 ? 'Yes' : 'No';
-                            
-                            html += `
-                                <tr>
-                                    <td>${colName}</td>
-                                    <td>${colType}</td>
-                                    <td>${isPK}</td>
-                                </tr>
-                            `;
-                        });
-                        
-                        html += `
-                                        </tbody>
-                                    </table>
-                                    
-                                    <div class="sample-data mt-3">
-                                        <p class="mb-1"><strong>Sample Data:</strong></p>
-                        `;
-                        
-                        // Add sample data
-                        try {
-                            const sampleData = this.db.exec(`SELECT * FROM ${tableName} LIMIT 3`)[0];
-                            
-                            if (sampleData) {
-                                html += `
-                                    <div class="table-container">
-                                        <table class="table table-sm">
-                                            <thead>
-                                                <tr>
-                                `;
-                                
-                                // Add headers
-                                sampleData.columns.forEach(col => {
-                                    html += `<th>${col}</th>`;
-                                });
-                                
-                                html += `
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                `;
-                                
-                                // Add rows
-                                sampleData.values.forEach(row => {
-                                    html += '<tr>';
-                                    row.forEach(cell => {
-                                        html += `<td>${cell}</td>`;
-                                    });
-                                    html += '</tr>';
-                                });
-                                
-                                html += `
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                `;
-                            }
-                        } catch (e) {
-                            html += `<p>No sample data available.</p>`;
-                        }
-                        
-                        html += `
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        
-                        return html;
-                    }).join('');
-                    
-                    // Add schema HTML to container
-                    this.schemaTablesContainer.innerHTML = schemaHtml;
-                    
-                    // Add event listeners to table headers
-                    document.querySelectorAll('.schema-table-header').forEach(header => {
-                        header.addEventListener('click', () => {
-                            const content = header.nextElementSibling;
-                            content.classList.toggle('active');
-                            
-                            const icon = header.querySelector('.fas.fa-chevron-down, .fas.fa-chevron-up');
-                            icon.classList.toggle('fa-chevron-down');
-                            icon.classList.toggle('fa-chevron-up');
-                        });
-                    });
-                }
-                
-                displayRelationshipDiagram() {
-                    // Create a simple SVG diagram of table relationships
-                    const diagram = `
-                        <svg width="350" height="300" xmlns="http://www.w3.org/2000/svg">
-                            <!-- Tables -->
-                            <rect x="20" y="20" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
-                            <text x="70" y="50" text-anchor="middle" font-size="12">customers</text>
-                            
-                            <rect x="230" y="20" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
-                            <text x="280" y="50" text-anchor="middle" font-size="12">employees</text>
-                            
-                            <rect x="20" y="120" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
-                            <text x="70" y="150" text-anchor="middle" font-size="12">orders</text>
-                            
-                            <rect x="230" y="120" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
-                            <text x="280" y="150" text-anchor="middle" font-size="12">products</text>
-                            
-                            <rect x="125" y="220" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
-                            <text x="175" y="250" text-anchor="middle" font-size="12">order_items</text>
-                            
-                            <!-- Relationships -->
-                            <line x1="70" y1="70" x2="70" y2="120" stroke="#495057" stroke-width="2" />
-                            <polygon points="65,110 70,120 75,110" fill="#495057" />
-                            
-                            <line x1="120" y1="145" x2="230" y2="145" stroke="#495057" stroke-width="2" />
-                            <polygon points="220,140 230,145 220,150" fill="#495057" />
-                            
-                            <line x1="70" y1="170" x2="125" y2="220" stroke="#495057" stroke-width="2" />
-                            <polygon points="118,210 125,220 130,208" fill="#495057" />
-                            
-                            <line x1="280" y1="170" x2="225" y2="220" stroke="#495057" stroke-width="2" />
-                            <polygon points="230,208 225,220 220,210" fill="#495057" />
-                        </svg>
-                    `;
-                    
-                    document.querySelector('.table-relation-diagram').innerHTML = diagram;
-                }
-                
-                displayQuestion() {
-                    if (this.questions.length === 0) return;
-                    
-                    // Clear any previous feedback
-                    const feedback = document.querySelector('.feedback');
-                    if (feedback) feedback.remove();
-                    
-                    // Get the current question based on randomized order
-                    const questionIndex = this.questionOrder[this.currentQuestionIndex];
-                    const question = this.questions[questionIndex];
-                    
-                    this.questionTitle.textContent = question.title;
-                    this.questionCounter.textContent = `${this.currentQuestionIndex + 1}/${this.questions.length}`;
-                    
-                    // Add level indicator
-                    const levelClass = `level-${question.level}`;
-                    this.questionTitle.innerHTML = `${question.title} <span class="level-badge ${levelClass}">${question.level}</span>`;
-                    
-                    // Create HTML based on question type
-                    let html = `<p class="mb-3">${question.description}</p>`;
-                    
-                    switch (question.type) {
-                        case 'multiple-choice':
-                            html += this.createMultipleChoiceHtml(question);
-                            break;
-                        case 'drag-drop':
-                            html += this.createDragDropHtml(question);
-                            break;
-                        case 'fill-in-blanks':
-                            html += this.createFillInBlanksHtml(question);
-                            break;
-                        case 'build-query':
-                            html += this.createBuildQueryHtml(question);
-                            break;
-                    }
-                    
-                    this.questionContent.innerHTML = html;
-                    
-                    // Reset the check answer button
-                    this.checkAnswerBtn.disabled = false;
-                    
-                    // Clear previous results
-                    if (!this.answeredQuestions.has(this.currentQuestionIndex)) {
-                        this.resultsContent.innerHTML = `
-                            <div class="alert alert-info">
-                                Results will appear here after you run a query.
-                            </div>
-                        `;
-                        this.chartContainer.innerHTML = '';
-                    }
-                    
-                    // Add event handlers based on question type
-                    switch (question.type) {
-                        case 'multiple-choice':
-                            this.setupMultipleChoiceHandlers();
-                            break;
-                        case 'drag-drop':
-                            this.setupDragDropHandlers();
-                            break;
-                        case 'fill-in-blanks':
-                            this.setupFillInBlanksHandlers();
-                            break;
-                        case 'build-query':
-                            this.setupBuildQueryHandlers();
-                            break;
-                    }
-                    
-                    // Restore previous answer if exists
-                    if (this.userAnswers[this.currentQuestionIndex] !== null) {
-                        this.restorePreviousAnswer();
-                        
-                        // If this question was already answered, disable the check button
-                        if (this.answeredQuestions.has(this.currentQuestionIndex)) {
-                            this.checkAnswerBtn.disabled = true;
-                        }
-                    }
-                    
-                    // Update button states
-                    this.updateNavigationButtons();
-                }
-                
-                createMultipleChoiceHtml(question) {
-                    let html = '<div class="multiple-choice">';
-                    
-                    question.options.forEach((option, index) => {
-                        html += `
-                            <div class="choice-option" data-index="${index}">
-                                <div class="sql-snippet">${option}</div>
-                            </div>
-                        `;
-                    });
-                    
-                    html += '</div>';
-                    return html;
-                }
-                
-                createDragDropHtml(question) {
-                    let html = `
-                        <div class="drag-drop-container">
-                            <p class="mb-2">Arrange the following segments in the correct order:</p>
-                            <div class="drop-area mb-3" id="drop-area"></div>
-                            <div class="drag-options">
-                    `;
-                    
-                    // Create shuffled version of segments for dragging
-                    const shuffledIndices = [...Array(question.segments.length).keys()];
-                    for (let i = shuffledIndices.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
-                    }
-                    
-                    shuffledIndices.forEach(index => {
-                        html += `
-                            <div class="drag-option" draggable="true" data-index="${index}">
-                                ${question.segments[index]}
-                            </div>
-                        `;
-                    });
-                    
-                    html += `
-                            </div>
-                        </div>
-                    `;
-                    
-                    return html;
-                }
-                
-                createFillInBlanksHtml(question) {
-                    let html = `<div class="fill-in-blanks-container">`;
-                    
-                    // Split the template by blanks
-                    const parts = question.template.split(/\[blank\d+\]/g);
-                    const blanks = question.template.match(/\[blank\d+\]/g) || [];
-                    
-                    html += '<div class="sql-snippet mb-3">';
-                    
-                    // Build the template with dropdown blanks
-                    for (let i = 0; i < parts.length; i++) {
-                        html += parts[i];
-                        
-                        if (i < blanks.length) {
-                            const blankName = blanks[i].replace(/[\[\]]/g, '');
-                            const options = question.blanks[blankName];
-                            
-                            html += `<select class="form-select-sm d-inline-block mx-1" style="width: auto;" data-blank="${blankName}">`;
-                            html += `<option value="">-- Select --</option>`;
-                            
-                            options.forEach(option => {
-                                html += `<option value="${option}">${option}</option>`;
-                            });
-                            
-                            html += `</select>`;
-                        }
-                    }
-                    
-                    html += '</div></div>';
-                    return html;
-                }
-                
-                createBuildQueryHtml(question) {
-                    let html = `
-                        <div class="build-query-container">
-                            <p class="mb-2">Build the SQL query by selecting the correct options:</p>
-                            <div class="query-builder">
-                    `;
-                    
-                    // Create the query builder with segments and dropdowns
-                    question.segments.forEach((segment, index) => {
-                        if (segment.type === 'static') {
-                            html += `<span class="query-segment">${segment.value}</span>`;
-                        } else if (segment.type === 'select') {
-                            html += `
-                                <span class="segment-dropdown">
-                                    <select class="form-select-sm d-inline-block" data-index="${index}">
-                                        <option value="">-- Select --</option>
-                            `;
-                            
-                            segment.options.forEach((option, optIndex) => {
-                                html += `<option value="${optIndex}">${option}</option>`;
-                            });
-                            
-                            html += `
-                                    </select>
-                                </span>
-                            `;
-                        }
-                    });
-                    
-                    html += `
-                            </div>
-                        </div>
-                    `;
-                    
-                    return html;
-                }
-                
-                setupMultipleChoiceHandlers() {
-                    document.querySelectorAll('.choice-option').forEach(option => {
-                        option.addEventListener('click', () => {
-                            // Remove selected class from all options
-                            document.querySelectorAll('.choice-option').forEach(opt => {
-                                opt.classList.remove('selected');
-                            });
-                            
-                            // Add selected class to clicked option
-                            option.classList.add('selected');
-                            
-                            // Save the answer
-                            this.userAnswers[this.currentQuestionIndex] = parseInt(option.dataset.index);
-                        });
-                    });
-                }
-                
-                setupDragDropHandlers() {
-                    const dragOptions = document.querySelectorAll('.drag-option');
-                    const dropArea = document.getElementById('drop-area');
-                    
-                    // Initialize drag options
-                    dragOptions.forEach(option => {
-                        option.addEventListener('dragstart', e => {
-                            e.dataTransfer.setData('text/plain', option.dataset.index);
-                        });
-                    });
-                    
-                    // Initialize drop area
-                    dropArea.addEventListener('dragover', e => {
-                        e.preventDefault();
-                        dropArea.classList.add('active');
-                    });
-                    
-                    dropArea.addEventListener('dragleave', () => {
-                        dropArea.classList.remove('active');
-                    });
-                    
-                    dropArea.addEventListener('drop', e => {
-                        e.preventDefault();
-                        dropArea.classList.remove('active');
-                        
-                        const index = e.dataTransfer.getData('text/plain');
-                        const option = document.querySelector(`.drag-option[data-index="${index}"]`);
-                        
-                        if (option) {
-                            // Clone the option to the drop area
-                            const clone = option.cloneNode(true);
-                            clone.setAttribute('draggable', 'false');
-                            clone.classList.add('dropped');
-                            
-                            // Add a remove button
-                            const removeBtn = document.createElement('button');
-                            removeBtn.className = 'btn btn-sm btn-danger';
-                            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-                            removeBtn.addEventListener('click', () => {
-                                clone.remove();
-                                option.style.display = 'block';
-                                this.updateDragDropAnswer();
-                            });
-                            
-                            clone.appendChild(removeBtn);
-                            dropArea.appendChild(clone);
-                            
-                            // Hide the original option
-                            option.style.display = 'none';
-                            
-                            // Update the answer
-                            this.updateDragDropAnswer();
-                        }
-                    });
-                }
-                
-                updateDragDropAnswer() {
-                    const droppedOptions = document.querySelectorAll('#drop-area .drag-option');
-                    const answer = Array.from(droppedOptions).map(option => parseInt(option.dataset.index));
-                    this.userAnswers[this.currentQuestionIndex] = answer;
-                }
-                
-                setupFillInBlanksHandlers() {
-                    document.querySelectorAll('.fill-in-blanks-container select').forEach(select => {
-                        select.addEventListener('change', () => {
-                            // Gather all selections
-                            const selections = {};
-                            document.querySelectorAll('.fill-in-blanks-container select').forEach(sel => {
-                                selections[sel.dataset.blank] = sel.value;
-                            });
-                            
-                            // Save the answer
-                            this.userAnswers[this.currentQuestionIndex] = selections;
-                        });
-                    });
-                }
-                
-                setupBuildQueryHandlers() {
-                    document.querySelectorAll('.build-query-container select').forEach(select => {
-                        select.addEventListener('change', () => {
-                            // Gather all selections
-                            const selections = [];
-                            document.querySelectorAll('.build-query-container select').forEach(sel => {
-                                if (sel.value) {
-                                    selections[parseInt(sel.dataset.index)] = parseInt(sel.value);
-                                }
-                            });
-                            
-                            // Save the answer
-                            this.userAnswers[this.currentQuestionIndex] = selections;
-                        });
-                    });
-                }
-                
-                restorePreviousAnswer() {
-                    const answer = this.userAnswers[this.currentQuestionIndex];
-                    const questionIndex = this.questionOrder[this.currentQuestionIndex];
-                    const question = this.questions[questionIndex];
-                    
-                    if (answer === null) return;
-                    
-                    switch (question.type) {
-                        case 'multiple-choice':
-                            document.querySelector(`.choice-option[data-index="${answer}"]`)?.classList.add('selected');
-                            break;
-                            
-                        case 'drag-drop':
-                            // For simplicity, we'll just display the feedback for drag-drop
-                            // Full restoration would be more complex
-                            if (this.answeredQuestions.has(this.currentQuestionIndex)) {
-                                this.showDragDropFeedback(question, answer);
-                            }
-                            break;
-                            
-                        case 'fill-in-blanks':
-                            // Restore dropdown selections
-                            for (const [blank, value] of Object.entries(answer)) {
-                                const dropdown = document.querySelector(`select[data-blank="${blank}"]`);
-                                if (dropdown) dropdown.value = value;
-                            }
-                            break;
-                            
-                        case 'build-query':
-                            // Restore dropdown selections
-                            for (let i = 0; i < answer.length; i++) {
-                                if (answer[i] !== undefined) {
-                                    const dropdown = document.querySelector(`select[data-index="${i}"]`);
-                                    if (dropdown) dropdown.value = answer[i];
-                                }
-                            }
-                            break;
-                    }
-                }
-                
-                showDragDropFeedback(question, userAnswer) {
-                    // This is a simplified approach to show feedback for drag-drop questions
-                    // when restoring a previously answered question
-                    let correctQuery = question.segments.join(' ');
-                    let userQuery = userAnswer.map(index => question.segments[index]).join(' ');
-                    let isCorrect = JSON.stringify(userAnswer) === JSON.stringify(question.correctOrder);
-                    
-                    let feedbackHtml = `
-                        <div class="feedback ${isCorrect ? 'correct' : 'incorrect'}">
-                            <h5><i class="fas ${isCorrect ? 'fa-check-circle' : 'fa-times-circle'} me-2"></i>${isCorrect ? 'Correct!' : 'Incorrect'}</h5>
-                            <p>${question.explanation}</p>
-                            <div class="mt-3">
-                                <strong>Correct query:</strong>
-                                <div class="sql-snippet">${correctQuery}</div>
-                            </div>
-                    `;
-                    
-                    if (!isCorrect) {
-                        feedbackHtml += `
-                            <div class="mt-3">
-                                <strong>Your query:</strong>
-                                <div class="sql-snippet">${userQuery}</div>
-                            </div>
-                        `;
-                    }
-                    
-                    feedbackHtml += `</div>`;
-                    
-                    // Add feedback to the question content
-                    this.questionContent.innerHTML += feedbackHtml;
-                }
-                
-                navigateQuestion(direction) {
-                    this.currentQuestionIndex += direction;
-                    
-                    // Ensure index is within bounds
-                    if (this.currentQuestionIndex < 0) {
-                        this.currentQuestionIndex = 0;
-                    } else if (this.currentQuestionIndex >= this.questions.length) {
-                        this.currentQuestionIndex = this.questions.length - 1;
-                    }
-                    
-                    // Display the current question
-                    this.displayQuestion();
-                    
-                    // Update progress
-                    this.updateProgress();
-                }
-                
-                updateNavigationButtons() {
-                    // Update previous button
-                    if (this.currentQuestionIndex === 0) {
-                        this.prevBtn.disabled = true;
-                    } else {
-                        this.prevBtn.disabled = false;
-                    }
-                    
-                    // Update next button
-                    if (this.currentQuestionIndex === this.questions.length - 1) {
-                        this.nextBtn.disabled = true;
-                    } else {
-                        this.nextBtn.disabled = false;
-                    }
-                }
-                
-                updateProgress() {
-                    // Calculate progress percentage
-                    const progress = ((this.currentQuestionIndex + 1) / this.questions.length) * 100;
-                    this.progressBar.style.width = `${progress}%`;
-                }
-                
-                checkAnswer() {
-                    const questionIndex = this.questionOrder[this.currentQuestionIndex];
-                    const question = this.questions[questionIndex];
-                    const userAnswer = this.userAnswers[this.currentQuestionIndex];
-                    
-                    if (userAnswer === null) {
-                        showToast('Please provide an answer before checking', 'warning');
-                        return;
-                    }
-                    
-                    // Add this question to answered set
-                    this.answeredQuestions.add(this.currentQuestionIndex);
-                    
-                    let isCorrect = false;
-                    let correctQuery = '';
-                    let userQuery = '';
-                    
-                    switch (question.type) {
-                        case 'multiple-choice':
-                            isCorrect = userAnswer === question.correctAnswer;
-                            correctQuery = question.options[question.correctAnswer];
-                            userQuery = question.options[userAnswer];
-                            
-                            // Highlight correct and incorrect answers
-                            document.querySelectorAll('.choice-option').forEach((option, index) => {
-                                if (index === question.correctAnswer) {
-                                    option.classList.add('correct');
-                                } else if (index === userAnswer && !isCorrect) {
-                                    option.classList.add('incorrect');
-                                }
-                            });
-                            break;
-                            
-                        case 'drag-drop':
-                            // Compare user order with correct order
-                            isCorrect = JSON.stringify(userAnswer) === JSON.stringify(question.correctOrder);
-                            correctQuery = question.segments.join(' ');
-                            userQuery = userAnswer.map(index => question.segments[index]).join(' ');
-                            break;
-                            
-                        case 'fill-in-blanks':
-                            // Check if all blanks match correct answers
-                            isCorrect = Object.entries(question.correctAnswers).every(
-                                ([blank, correct]) => userAnswer[blank] === correct
-                            );
-                            
-                            // Construct the correct query
-                            let correctQueryParts = question.template;
-                            for (const [blank, value] of Object.entries(question.correctAnswers)) {
-                                correctQueryParts = correctQueryParts.replace(`[${blank}]`, value);
-                            }
-                            correctQuery = correctQueryParts;
-                            
-                            // Construct the user query
-                            let userQueryParts = question.template;
-                            for (const [blank, value] of Object.entries(userAnswer)) {
-                                userQueryParts = userQueryParts.replace(`[${blank}]`, value || '[empty]');
-                            }
-                            userQuery = userQueryParts;
-                            break;
-                            
-                        case 'build-query':
-                            // Check if selected options match correct answers
-                            isCorrect = question.correctAnswers.every((correct, index) => 
-                                userAnswer[index] === correct
-                            );
-                            
-                            // Construct the correct query
-                            correctQuery = question.segments.map((segment, index) => {
-                                if (segment.type === 'static') return segment.value;
-                                return segment.options[question.correctAnswers[index]];
-                            }).join(' ');
-                            
-                            // Construct the user query
-                            userQuery = question.segments.map((segment, index) => {
-                                if (segment.type === 'static') return segment.value;
-                                return segment.options[userAnswer[index]] || '[empty]';
-                            }).join(' ');
-                            break;
-                    }
-                    
-                    // Display feedback
-                    let feedbackHtml = `
-                        <div class="feedback ${isCorrect ? 'correct' : 'incorrect'}">
-                            <h5><i class="fas ${isCorrect ? 'fa-check-circle' : 'fa-times-circle'} me-2"></i>${isCorrect ? 'Correct!' : 'Incorrect'}</h5>
-                            <p>${question.explanation}</p>
-                            <div class="mt-3">
-                                <strong>Correct query:</strong>
-                                <div class="sql-snippet">${correctQuery}</div>
-                            </div>
-                    `;
-                    
-                    if (!isCorrect) {
-                        feedbackHtml += `
-                            <div class="mt-3">
-                                <strong>Your query:</strong>
-                                <div class="sql-snippet">${userQuery}</div>
-                            </div>
-                        `;
-                    }
-                    
-                    feedbackHtml += `</div>`;
-                    
-                    // Add feedback to the question content
-                    this.questionContent.innerHTML += feedbackHtml;
-                    
-                    // Execute the correct query and display results
-                    this.executeQueryAndDisplay(correctQuery);
-                    
-                    // Disable check button after showing answer
-                    this.checkAnswerBtn.disabled = true;
-                    
-                    // Update score if correct
-                    if (isCorrect) {
-                        this.score++;
                     }
                 }
                 
@@ -2260,38 +1203,406 @@
                         }
                     }
                 }
+            }
+            
+            // Set up database with sample data
+            function setupDatabase(db) {
+                // Create customers table
+                db.run(`
+                    CREATE TABLE customers (
+                        customer_id INTEGER PRIMARY KEY,
+                        first_name TEXT,
+                        last_name TEXT,
+                        email TEXT,
+                        city TEXT,
+                        state TEXT,
+                        country TEXT,
+                        registration_date TEXT
+                    )
+                `);
                 
-                resetQuiz() {
-                    // Confirm reset
-                    if (confirm('Are you sure you want to reset the quiz? Your progress will be lost.')) {
-                        // Re-randomize questions
-                        this.randomizeQuestions();
-                        
-                        // Reset current state
-                        this.currentQuestionIndex = 0;
-                        this.score = 0;
-                        this.answeredQuestions = new Set();
-                        this.checkAnswerBtn.disabled = false;
-                        
-                        // Clear results
-                        this.resultsContent.innerHTML = `
-                            <div class="alert alert-info">
-                                Results will appear here after you run a query.
+                // Insert sample customers
+                const customerData = [
+                    [1, 'John', 'Smith', 'john.smith@example.com', 'New York', 'NY', 'USA', '2022-01-15'],
+                    [2, 'Emily', 'Johnson', 'emily.j@example.com', 'Toronto', 'ON', 'Canada', '2022-02-20'],
+                    [3, 'Michael', 'Williams', 'michael.w@example.com', 'Chicago', 'IL', 'USA', '2022-03-10'],
+                    [4, 'Sophia', 'Brown', 'sophia.b@example.com', 'London', 'UK', 'UK', '2022-01-05'],
+                    [5, 'Daniel', 'Jones', 'daniel.j@example.com', 'Sydney', 'NSW', 'Australia', '2022-04-12'],
+                    [6, 'Olivia', 'Garcia', 'olivia.g@example.com', 'Madrid', 'MD', 'Spain', '2022-02-28'],
+                    [7, 'James', 'Miller', 'james.m@example.com', 'Los Angeles', 'CA', 'USA', '2022-05-17'],
+                    [8, 'Emma', 'Davis', 'emma.d@example.com', 'Vancouver', 'BC', 'Canada', '2022-06-23']
+                ];
+                
+                customerData.forEach(customer => {
+                    db.run(
+                        'INSERT INTO customers VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                        customer
+                    );
+                });
+                
+                // Create products table
+                db.run(`
+                    CREATE TABLE products (
+                        product_id INTEGER PRIMARY KEY,
+                        product_name TEXT,
+                        category TEXT,
+                        price REAL,
+                        stock_quantity INTEGER
+                    )
+                `);
+                
+                // Insert sample products
+                const productData = [
+                    [1, 'Laptop Pro', 'Electronics', 1299.99, 50],
+                    [2, 'Smartphone X', 'Electronics', 899.99, 100],
+                    [3, 'Wireless Headphones', 'Electronics', 199.99, 75],
+                    [4, 'Designer T-shirt', 'Clothing', 49.99, 200],
+                    [5, 'Premium Jeans', 'Clothing', 89.99, 150],
+                    [6, 'Running Shoes', 'Footwear', 129.99, 80],
+                    [7, 'Coffee Table', 'Furniture', 249.99, 30],
+                    [8, 'Desk Chair', 'Furniture', 179.99, 40],
+                    [9, 'Blender', 'Kitchen', 89.99, 60],
+                    [10, 'Toaster', 'Kitchen', 59.99, 70]
+                ];
+                
+                productData.forEach(product => {
+                    db.run(
+                        'INSERT INTO products VALUES (?, ?, ?, ?, ?)',
+                        product
+                    );
+                });
+                
+                // Create orders table
+                db.run(`
+                    CREATE TABLE orders (
+                        order_id INTEGER PRIMARY KEY,
+                        customer_id INTEGER,
+                        order_date TEXT,
+                        total_amount REAL,
+                        status TEXT,
+                        FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+                    )
+                `);
+                
+                // Insert sample orders
+                const orderData = [
+                    [1, 1, '2023-01-10', 1349.98, 'Delivered'],
+                    [2, 2, '2023-01-15', 899.99, 'Delivered'],
+                    [3, 3, '2023-02-05', 279.98, 'Shipped'],
+                    [4, 4, '2023-02-10', 129.99, 'Delivered'],
+                    [5, 5, '2023-02-20', 429.98, 'Processing'],
+                    [6, 1, '2023-03-05', 139.98, 'Delivered'],
+                    [7, 2, '2023-03-15', 249.99, 'Shipped'],
+                    [8, 6, '2023-03-20', 159.98, 'Processing'],
+                    [9, 7, '2023-04-10', 1099.98, 'Delivered'],
+                    [10, 8, '2023-04-12', 229.98, 'Pending'],
+                    [11, 3, '2023-05-05', 149.99, 'Shipped'],
+                    [12, 4, '2023-05-10', 249.99, 'Delivered']
+                ];
+                
+                orderData.forEach(order => {
+                    db.run(
+                        'INSERT INTO orders VALUES (?, ?, ?, ?, ?)',
+                        order
+                    );
+                });
+                
+                // Create order_items table
+                db.run(`
+                    CREATE TABLE order_items (
+                        order_item_id INTEGER PRIMARY KEY,
+                        order_id INTEGER,
+                        product_id INTEGER,
+                        quantity INTEGER,
+                        unit_price REAL,
+                        FOREIGN KEY (order_id) REFERENCES orders(order_id),
+                        FOREIGN KEY (product_id) REFERENCES products(product_id)
+                    )
+                `);
+                
+                // Insert sample order items
+                const orderItemData = [
+                    [1, 1, 1, 1, 1299.99],
+                    [2, 1, 4, 1, 49.99],
+                    [3, 2, 2, 1, 899.99],
+                    [4, 3, 3, 1, 199.99],
+                    [5, 3, 4, 2, 39.99],
+                    [6, 4, 6, 1, 129.99],
+                    [7, 5, 7, 1, 249.99],
+                    [8, 5, 8, 1, 179.99],
+                    [9, 6, 4, 2, 49.99],
+                    [10, 6, 5, 1, 39.99],
+                    [11, 7, 7, 1, 249.99],
+                    [12, 8, 4, 2, 49.99],
+                    [13, 8, 6, 1, 59.99],
+                    [14, 9, 1, 1, 999.99],
+                    [15, 9, 2, 1, 99.99],
+                    [16, 10, 9, 1, 89.99],
+                    [17, 10, 10, 1, 139.99],
+                    [18, 11, 3, 1, 149.99],
+                    [19, 12, 7, 1, 249.99]
+                ];
+                
+                orderItemData.forEach(item => {
+                    db.run(
+                        'INSERT INTO order_items VALUES (?, ?, ?, ?, ?)',
+                        item
+                    );
+                });
+                
+                // Create employees table
+                db.run(`
+                    CREATE TABLE employees (
+                        employee_id INTEGER PRIMARY KEY,
+                        first_name TEXT,
+                        last_name TEXT,
+                        department TEXT,
+                        salary REAL,
+                        hire_date TEXT
+                    )
+                `);
+                
+                // Insert sample employees
+                const employeeData = [
+                    [1, 'Robert', 'Anderson', 'Sales', 65000, '2021-01-15'],
+                    [2, 'Jennifer', 'Thomas', 'Marketing', 72000, '2021-02-10'],
+                    [3, 'William', 'Jackson', 'Sales', 68000, '2021-03-05'],
+                    [4, 'Elizabeth', 'White', 'IT', 85000, '2021-01-20'],
+                    [5, 'David', 'Harris', 'Finance', 78000, '2021-04-12'],
+                    [6, 'Maria', 'Martin', 'HR', 62000, '2021-05-20'],
+                    [7, 'Joseph', 'Thompson', 'IT', 88000, '2021-02-15'],
+                    [8, 'Susan', 'Garcia', 'Marketing', 69000, '2021-06-10']
+                ];
+                
+                employeeData.forEach(employee => {
+                    db.run(
+                        'INSERT INTO employees VALUES (?, ?, ?, ?, ?, ?)',
+                        employee
+                    );
+                });
+                
+                // Create books table for the query builder example
+                db.run(`
+                    CREATE TABLE books (
+                        id INTEGER PRIMARY KEY,
+                        title TEXT,
+                        price REAL,
+                        publication_year INTEGER,
+                        author_id INTEGER
+                    )
+                `);
+                
+                // Insert sample books
+                const bookData = [
+                    [1, 'SQL Fundamentals', 29.99, 2020, 1],
+                    [2, 'Advanced SQL', 49.99, 2021, 1],
+                    [3, 'Database Design', 39.99, 2019, 2],
+                    [4, 'Web Development Basics', 24.99, 2022, 3],
+                    [5, 'Python Programming', 34.99, 2021, 4],
+                    [6, 'JavaScript Mastery', 44.99, 2022, 3],
+                    [7, 'Data Science Essentials', 54.99, 2020, 5],
+                    [8, 'Machine Learning', 59.99, 2021, 5]
+                ];
+                
+                bookData.forEach(book => {
+                    db.run(
+                        'INSERT INTO books VALUES (?, ?, ?, ?, ?)',
+                        book
+                    );
+                });
+                
+                // Create book_orders table
+                db.run(`
+                    CREATE TABLE book_orders (
+                        id INTEGER PRIMARY KEY,
+                        book_id INTEGER,
+                        quantity INTEGER,
+                        order_date TEXT,
+                        FOREIGN KEY (book_id) REFERENCES books(id)
+                    )
+                `);
+                
+                // Insert sample book orders
+                const bookOrdersData = [
+                    [1, 1, 3, '2023-01-15'],
+                    [2, 2, 1, '2023-01-20'],
+                    [3, 3, 2, '2023-02-05'],
+                    [4, 4, 1, '2023-02-10'],
+                    [5, 5, 4, '2023-03-15'],
+                    [6, 6, 2, '2023-03-20'],
+                    [7, 1, 1, '2023-04-10'],
+                    [8, 2, 2, '2023-04-15'],
+                    [9, 7, 3, '2023-05-05'],
+                    [10, 8, 1, '2023-05-10']
+                ];
+                
+                bookOrdersData.forEach(order => {
+                    db.run(
+                        'INSERT INTO book_orders VALUES (?, ?, ?, ?)',
+                        order
+                    );
+                });
+            }
+            
+            // Display database schema function
+            function displayDatabaseSchema(db) {
+                // Get tables from the database
+                const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table'")[0].values;
+                const schemaTablesContainer = document.getElementById('schema-tables');
+                
+                // Create HTML for each table
+                const schemaHtml = tables.map(table => {
+                    const tableName = table[0];
+                    
+                    // Get table columns
+                    const pragma = db.exec(`PRAGMA table_info(${tableName})`)[0];
+                    
+                    // Create HTML for the table schema
+                    let html = `
+                        <div class="schema-table">
+                            <div class="schema-table-header" data-table="${tableName}">
+                                <i class="fas fa-table me-2"></i>${tableName}
+                                <i class="fas fa-chevron-down float-end"></i>
                             </div>
+                            <div class="schema-table-content" id="schema-${tableName}">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Column</th>
+                                            <th>Type</th>
+                                            <th>PK</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    
+                    // Add rows for each column
+                    pragma.values.forEach(col => {
+                        const colName = col[1];
+                        const colType = col[2];
+                        const isPK = col[5] === 1 ? 'Yes' : 'No';
+                        
+                        html += `
+                            <tr>
+                                <td>${colName}</td>
+                                <td>${colType}</td>
+                                <td>${isPK}</td>
+                            </tr>
                         `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                                
+                                <div class="sample-data mt-3">
+                                    <p class="mb-1"><strong>Sample Data:</strong></p>
+                    `;
+                    
+                    // Add sample data
+                    try {
+                        const sampleData = db.exec(`SELECT * FROM ${tableName} LIMIT 3`)[0];
                         
-                        // Clear chart
-                        this.chartContainer.innerHTML = '';
-                        
-                        // Display first question
-                        this.displayQuestion();
-                        
-                        // Update progress bar
-                        this.updateProgress();
-                        
-                        showToast('Quiz has been reset with new questions', 'success');
+                        if (sampleData) {
+                            html += `
+                                <div class="table-container">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                        `;
+                                            
+                                            // Add headers
+                                            sampleData.columns.forEach(col => {
+                                                html += `<th>${col}</th>`;
+                                            });
+                                            
+                                            html += `
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                            `;
+                                            
+                                            // Add rows
+                                            sampleData.values.forEach(row => {
+                                                html += '<tr>';
+                                                row.forEach(cell => {
+                                                    html += `<td>${cell}</td>`;
+                                                });
+                                                html += '</tr>';
+                                            });
+                                            
+                                            html += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                        }
+                    } catch (e) {
+                        html += `<p>No sample data available.</p>`;
                     }
-                }
+                    
+                    html += `
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    return html;
+                }).join('');
+                
+                // Add schema HTML to container
+                schemaTablesContainer.innerHTML = schemaHtml;
+                
+                // Add event listeners to table headers
+                document.querySelectorAll('.schema-table-header').forEach(header => {
+                    header.addEventListener('click', () => {
+                        const content = header.nextElementSibling;
+                        content.classList.toggle('active');
+                        
+                        const icon = header.querySelector('.fas.fa-chevron-down, .fas.fa-chevron-up');
+                        icon.classList.toggle('fa-chevron-down');
+                        icon.classList.toggle('fa-chevron-up');
+                    });
+                });
+            }
+            
+            // Display relationship diagram
+            function displayRelationshipDiagram() {
+                // Create a simple SVG diagram of table relationships
+                const diagram = `
+                    <svg width="350" height="300" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Tables -->
+                        <rect x="20" y="20" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
+                        <text x="70" y="50" text-anchor="middle" font-size="12">customers</text>
+                        
+                        <rect x="230" y="20" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
+                        <text x="280" y="50" text-anchor="middle" font-size="12">employees</text>
+                        
+                        <rect x="20" y="120" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
+                        <text x="70" y="150" text-anchor="middle" font-size="12">orders</text>
+                        
+                        <rect x="230" y="120" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
+                        <text x="280" y="150" text-anchor="middle" font-size="12">products</text>
+                        
+                        <rect x="125" y="220" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
+                        <text x="175" y="250" text-anchor="middle" font-size="12">order_items</text>
+                        
+                        <!-- Relationships -->
+                        <line x1="70" y1="70" x2="70" y2="120" stroke="#495057" stroke-width="2" />
+                        <polygon points="65,110 70,120 75,110" fill="#495057" />
+                        
+                        <line x1="120" y1="145" x2="230" y2="145" stroke="#495057" stroke-width="2" />
+                        <polygon points="220,140 230,145 220,150" fill="#495057" />
+                        
+                        <line x1="70" y1="170" x2="125" y2="220" stroke="#495057" stroke-width="2" />
+                        <polygon points="118,210 125,220 130,208" fill="#495057" />
+                        
+                        <line x1="280" y1="170" x2="225" y2="220" stroke="#495057" stroke-width="2" />
+                        <polygon points="230,208 225,220 220,210" fill="#495057" />
+                    </svg>
+                `;
+                
+                document.querySelector('.table-relation-diagram').innerHTML = diagram;
             }
         });
         
