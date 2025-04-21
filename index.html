@@ -362,6 +362,19 @@
             margin-bottom: 20px;
         }
         
+        /* Alias input styling */
+        .alias-input-group {
+            margin-left: 20px;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            width: 80%;
+        }
+        
+        .column-option.selected {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-color: var(--primary);
+        }
+        
         .builder-section {
             margin-bottom: 15px;
         }
@@ -390,11 +403,6 @@
         
         .column-option:hover {
             background-color: #e9ecef;
-        }
-        
-        .column-option.selected {
-            background-color: rgba(67, 97, 238, 0.1);
-            border-color: var(--primary);
         }
         
         .join-container {
@@ -428,13 +436,106 @@
             <a class="navbar-brand" href="#">
                 <i class="fas fa-database me-2"></i>SQL Query Builder
             </a>
-            <button id="reset-builder" class="btn btn-outline-light btn-sm">
-                <i class="fas fa-undo me-1"></i>Reset Builder
-            </button>
+            <div class="d-flex">
+                <button id="create-table-btn" class="btn btn-outline-light btn-sm me-2">
+                    <i class="fas fa-plus me-1"></i>Create Table
+                </button>
+                <button id="custom-sql-btn" class="btn btn-outline-light btn-sm me-2">
+                    <i class="fas fa-code me-1"></i>Custom SQL
+                </button>
+                <button id="reset-builder" class="btn btn-outline-light btn-sm">
+                    <i class="fas fa-undo me-1"></i>Reset Builder
+                </button>
+            </div>
         </div>
     </nav>
 
     <div class="container mt-4">
+        <!-- Table Creation Modal -->
+        <div class="modal fade" id="createTableModal" tabindex="-1" aria-labelledby="createTableModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createTableModalLabel">Create New Table</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="table-name" class="form-label">Table Name</label>
+                            <input type="text" class="form-control" id="table-name" placeholder="Enter table name">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Columns</label>
+                            <div id="columns-container">
+                                <div class="column-row row mb-2">
+                                    <div class="col-md-4">
+                                        <input type="text" class="form-control column-name" placeholder="Column name">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select column-type">
+                                            <option value="INTEGER">INTEGER</option>
+                                            <option value="TEXT">TEXT</option>
+                                            <option value="REAL">REAL</option>
+                                            <option value="BLOB">BLOB</option>
+                                            <option value="NUMERIC">NUMERIC</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input column-pk" type="checkbox">
+                                            <label class="form-check-label">Primary Key</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="button" class="btn btn-outline-danger remove-column">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" id="add-column" class="btn btn-outline-primary mt-2">
+                                <i class="fas fa-plus me-1"></i>Add Column
+                            </button>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Sample Data (Optional)</label>
+                            <div class="alert alert-info">
+                                Add sample data after creating the table from the schema tab.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="create-table-submit" class="btn btn-primary">Create Table</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Custom SQL Modal -->
+        <div class="modal fade" id="customSqlModal" tabindex="-1" aria-labelledby="customSqlModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="customSqlModalLabel">Execute Custom SQL</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="custom-sql" class="form-label">SQL Query</label>
+                            <textarea class="form-control" id="custom-sql" rows="8" placeholder="Enter your SQL query here..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" id="run-custom-sql" class="btn btn-primary">Run Query</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- SQL Query Builder Section - Now Main Focus -->
         <div id="sql-builder-section" class="sql-builder-container">
             <h4 class="mb-3">
@@ -502,6 +603,13 @@
                         <label>ON Condition:</label>
                         <input type="text" id="join-condition" class="form-control" 
                                placeholder="e.g., table1.id = table2.table1_id">
+                    </div>
+
+                    <div class="builder-section">
+                        <label>Select Columns from Joined Table:</label>
+                        <div id="join-columns" class="builder-columns">
+                            <!-- Columns will be populated based on selected join table -->
+                        </div>
                     </div>
                 </div>
                 
@@ -624,6 +732,9 @@
                 // Display relationship diagram
                 displayRelationshipDiagram();
                 
+                // Set up event listeners for custom table creation and custom SQL
+                setupCustomTableAndSql(db);
+                
             }).catch(err => {
                 showToast('Error initializing SQL database: ' + err.message, 'danger');
             });
@@ -637,6 +748,8 @@
                     this.joinType = 'INNER JOIN';
                     this.joinTable = '';
                     this.joinCondition = '';
+                    this.joinColumns = [];
+                    this.columnAliases = {};
                     this.whereCondition = '';
                     this.groupColumns = [];
                     this.havingCondition = '';
@@ -656,6 +769,7 @@
                     this.joinTypeEl = document.getElementById('join-type');
                     this.joinTableEl = document.getElementById('join-table');
                     this.joinConditionEl = document.getElementById('join-condition');
+                    this.joinColumnsEl = document.getElementById('join-columns');
                     
                     // WHERE tab elements
                     this.whereConditionEl = document.getElementById('where-condition');
@@ -701,6 +815,7 @@
                     
                     this.joinTableEl.addEventListener('change', () => {
                         this.joinTable = this.joinTableEl.value;
+                        this.populateJoinColumns();
                         this.updateSqlPreview();
                     });
                     
@@ -763,6 +878,220 @@
                     }
                 }
                 
+                populateJoinColumns() {
+                    // Clear existing columns
+                    this.joinColumnsEl.innerHTML = '';
+                    this.joinColumns = [];
+                    
+                    if (!this.joinTable) return;
+                    
+                    // Get columns for the joined table
+                    try {
+                        const pragma = this.db.exec(`PRAGMA table_info(${this.joinTable})`)[0];
+                        
+                        // Create a clickable option for each column
+                        pragma.values.forEach(col => {
+                            const colName = col[1];
+                            const colType = col[2];
+                            
+                            // Create column option element
+                            const columnEl = document.createElement('div');
+                            columnEl.className = 'column-option';
+                            columnEl.dataset.column = `${this.joinTable}.${colName}`;
+                            columnEl.textContent = `${this.joinTable}.${colName}`;
+                            
+                            // Add click event to toggle selection and show alias input
+                            columnEl.addEventListener('click', (e) => {
+                                const fullColName = `${this.joinTable}.${colName}`;
+                                
+                                if (columnEl.classList.contains('selected')) {
+                                    // If already selected, remove selection and alias input if exists
+                                    columnEl.classList.remove('selected');
+                                    this.joinColumns = this.joinColumns.filter(col => col !== fullColName);
+                                    
+                                    const existingAlias = columnEl.nextElementSibling;
+                                    if (existingAlias && existingAlias.classList.contains('alias-input-group')) {
+                                        this.joinColumnsEl.removeChild(existingAlias);
+                                        delete this.columnAliases[fullColName];
+                                    }
+                                } else {
+                                    // Add selection
+                                    columnEl.classList.add('selected');
+                                    this.joinColumns.push(fullColName);
+                                    
+                                    // Create alias input
+                                    const aliasGroup = document.createElement('div');
+                                    aliasGroup.className = 'alias-input-group input-group input-group-sm mb-2';
+                                    aliasGroup.innerHTML = `
+                                        <span class="input-group-text">AS</span>
+                                        <input type="text" class="form-control alias-input" 
+                                            placeholder="${colName}_alias" data-column="${fullColName}">
+                                    `;
+                                    
+                                    // Insert alias input after the column element
+                                    if (columnEl.nextElementSibling) {
+                                        this.joinColumnsEl.insertBefore(aliasGroup, columnEl.nextElementSibling);
+                                    } else {
+                                        this.joinColumnsEl.appendChild(aliasGroup);
+                                    }
+                                    
+                                    // Add event listener for alias input
+                                    const aliasInput = aliasGroup.querySelector('.alias-input');
+                                    aliasInput.addEventListener('input', () => {
+                                        if (aliasInput.value.trim()) {
+                                            this.columnAliases[fullColName] = aliasInput.value.trim();
+                                        } else {
+                                            delete this.columnAliases[fullColName];
+                                        }
+                                        this.updateSqlPreview();
+                                    });
+                                }
+                                
+                                this.updateSqlPreview();
+                            });
+                            
+                            this.joinColumnsEl.appendChild(columnEl);
+                        });
+                        
+                        // Add aggregate functions for join columns
+                        const aggregateFunctions = [
+                            'COUNT(*)',
+                            'SUM',
+                            'AVG',
+                            'MIN',
+                            'MAX'
+                        ];
+                        
+                        const aggregateHeader = document.createElement('div');
+                        aggregateHeader.className = 'mt-3 mb-2 fw-bold';
+                        aggregateHeader.textContent = 'Aggregate Functions:';
+                        this.joinColumnsEl.appendChild(aggregateHeader);
+                        
+                        aggregateFunctions.forEach(func => {
+                            if (func === 'COUNT(*)') {
+                                const countOption = document.createElement('div');
+                                countOption.className = 'column-option';
+                                const funcText = `COUNT(${this.joinTable}.*)`;
+                                countOption.dataset.column = funcText;
+                                countOption.textContent = funcText;
+                                
+                                countOption.addEventListener('click', () => {
+                                    countOption.classList.toggle('selected');
+                                    
+                                    if (countOption.classList.contains('selected')) {
+                                        this.joinColumns.push(funcText);
+                                        
+                                        // Create alias input
+                                        const aliasGroup = document.createElement('div');
+                                        aliasGroup.className = 'alias-input-group input-group input-group-sm mb-2';
+                                        aliasGroup.innerHTML = `
+                                            <span class="input-group-text">AS</span>
+                                            <input type="text" class="form-control alias-input" 
+                                                placeholder="count_alias" data-column="${funcText}">
+                                        `;
+                                        
+                                        // Insert alias input after the column element
+                                        if (countOption.nextElementSibling) {
+                                            this.joinColumnsEl.insertBefore(aliasGroup, countOption.nextElementSibling);
+                                        } else {
+                                            this.joinColumnsEl.appendChild(aliasGroup);
+                                        }
+                                        
+                                        // Add event listener for alias input
+                                        const aliasInput = aliasGroup.querySelector('.alias-input');
+                                        aliasInput.addEventListener('input', () => {
+                                            if (aliasInput.value.trim()) {
+                                                this.columnAliases[funcText] = aliasInput.value.trim();
+                                            } else {
+                                                delete this.columnAliases[funcText];
+                                            }
+                                            this.updateSqlPreview();
+                                        });
+                                    } else {
+                                        this.joinColumns = this.joinColumns.filter(col => col !== funcText);
+                                        
+                                        const existingAlias = countOption.nextElementSibling;
+                                        if (existingAlias && existingAlias.classList.contains('alias-input-group')) {
+                                            this.joinColumnsEl.removeChild(existingAlias);
+                                            delete this.columnAliases[funcText];
+                                        }
+                                    }
+                                    
+                                    this.updateSqlPreview();
+                                });
+                                
+                                this.joinColumnsEl.appendChild(countOption);
+                            } else {
+                                pragma.values.forEach(col => {
+                                    const colName = col[1];
+                                    const colType = col[2];
+                                    
+                                    // Only show aggregate functions for numeric columns
+                                    if (colType.includes('INT') || colType.includes('REAL') || 
+                                        colType.includes('FLOAT') || colType.includes('DOUBLE') || 
+                                        colType.includes('NUMERIC')) {
+                                        
+                                        const funcOption = document.createElement('div');
+                                        funcOption.className = 'column-option';
+                                        const funcText = `${func}(${this.joinTable}.${colName})`;
+                                        funcOption.dataset.column = funcText;
+                                        funcOption.textContent = funcText;
+                                        
+                                        funcOption.addEventListener('click', () => {
+                                            funcOption.classList.toggle('selected');
+                                            
+                                            if (funcOption.classList.contains('selected')) {
+                                                this.joinColumns.push(funcText);
+                                                
+                                                // Create alias input
+                                                const aliasGroup = document.createElement('div');
+                                                aliasGroup.className = 'alias-input-group input-group input-group-sm mb-2';
+                                                aliasGroup.innerHTML = `
+                                                    <span class="input-group-text">AS</span>
+                                                    <input type="text" class="form-control alias-input" 
+                                                        placeholder="${func}_${colName}" data-column="${funcText}">
+                                                `;
+                                                
+                                                // Insert alias input after the column element
+                                                if (funcOption.nextElementSibling) {
+                                                    this.joinColumnsEl.insertBefore(aliasGroup, funcOption.nextElementSibling);
+                                                } else {
+                                                    this.joinColumnsEl.appendChild(aliasGroup);
+                                                }
+                                                
+                                                // Add event listener for alias input
+                                                const aliasInput = aliasGroup.querySelector('.alias-input');
+                                                aliasInput.addEventListener('input', () => {
+                                                    if (aliasInput.value.trim()) {
+                                                        this.columnAliases[funcText] = aliasInput.value.trim();
+                                                    } else {
+                                                        delete this.columnAliases[funcText];
+                                                    }
+                                                    this.updateSqlPreview();
+                                                });
+                                            } else {
+                                                this.joinColumns = this.joinColumns.filter(col => col !== funcText);
+                                                
+                                                const existingAlias = funcOption.nextElementSibling;
+                                                if (existingAlias && existingAlias.classList.contains('alias-input-group')) {
+                                                    this.joinColumnsEl.removeChild(existingAlias);
+                                                    delete this.columnAliases[funcText];
+                                                }
+                                            }
+                                            
+                                            this.updateSqlPreview();
+                                        });
+                                        
+                                        this.joinColumnsEl.appendChild(funcOption);
+                                    }
+                                });
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error fetching join columns:', error);
+                    }
+                }
+                
                 populateColumns() {
                     // Clear existing columns
                     this.selectColumnsEl.innerHTML = '';
@@ -787,16 +1116,51 @@
                             columnEl.dataset.column = `${this.selectedTable}.${colName}`;
                             columnEl.textContent = `${this.selectedTable}.${colName}`;
                             
-                            // Add click event to toggle selection
+                            // Add click event to toggle selection and show alias input
                             columnEl.addEventListener('click', () => {
-                                columnEl.classList.toggle('selected');
+                                const fullColName = `${this.selectedTable}.${colName}`;
                                 
                                 if (columnEl.classList.contains('selected')) {
-                                    this.selectedColumns.push(`${this.selectedTable}.${colName}`);
+                                    // If already selected, remove selection and alias input if exists
+                                    columnEl.classList.remove('selected');
+                                    this.selectedColumns = this.selectedColumns.filter(col => col !== fullColName);
+                                    
+                                    const existingAlias = columnEl.nextElementSibling;
+                                    if (existingAlias && existingAlias.classList.contains('alias-input-group')) {
+                                        this.selectColumnsEl.removeChild(existingAlias);
+                                        delete this.columnAliases[fullColName];
+                                    }
                                 } else {
-                                    this.selectedColumns = this.selectedColumns.filter(
-                                        col => col !== `${this.selectedTable}.${colName}`
-                                    );
+                                    // Add selection
+                                    columnEl.classList.add('selected');
+                                    this.selectedColumns.push(fullColName);
+                                    
+                                    // Create alias input
+                                    const aliasGroup = document.createElement('div');
+                                    aliasGroup.className = 'alias-input-group input-group input-group-sm mb-2';
+                                    aliasGroup.innerHTML = `
+                                        <span class="input-group-text">AS</span>
+                                        <input type="text" class="form-control alias-input" 
+                                            placeholder="${colName}_alias" data-column="${fullColName}">
+                                    `;
+                                    
+                                    // Insert alias input after the column element
+                                    if (columnEl.nextElementSibling) {
+                                        this.selectColumnsEl.insertBefore(aliasGroup, columnEl.nextElementSibling);
+                                    } else {
+                                        this.selectColumnsEl.appendChild(aliasGroup);
+                                    }
+                                    
+                                    // Add event listener for alias input
+                                    const aliasInput = aliasGroup.querySelector('.alias-input');
+                                    aliasInput.addEventListener('input', () => {
+                                        if (aliasInput.value.trim()) {
+                                            this.columnAliases[fullColName] = aliasInput.value.trim();
+                                        } else {
+                                            delete this.columnAliases[fullColName];
+                                        }
+                                        this.updateSqlPreview();
+                                    });
                                 }
                                 
                                 this.updateSqlPreview();
@@ -854,10 +1218,41 @@
                                     
                                     if (countOption.classList.contains('selected')) {
                                         this.selectedColumns.push(func);
+                                        
+                                        // Create alias input
+                                        const aliasGroup = document.createElement('div');
+                                        aliasGroup.className = 'alias-input-group input-group input-group-sm mb-2';
+                                        aliasGroup.innerHTML = `
+                                            <span class="input-group-text">AS</span>
+                                            <input type="text" class="form-control alias-input" 
+                                                placeholder="count_alias" data-column="${func}">
+                                        `;
+                                        
+                                        // Insert alias input after the column element
+                                        if (countOption.nextElementSibling) {
+                                            this.selectColumnsEl.insertBefore(aliasGroup, countOption.nextElementSibling);
+                                        } else {
+                                            this.selectColumnsEl.appendChild(aliasGroup);
+                                        }
+                                        
+                                        // Add event listener for alias input
+                                        const aliasInput = aliasGroup.querySelector('.alias-input');
+                                        aliasInput.addEventListener('input', () => {
+                                            if (aliasInput.value.trim()) {
+                                                this.columnAliases[func] = aliasInput.value.trim();
+                                            } else {
+                                                delete this.columnAliases[func];
+                                            }
+                                            this.updateSqlPreview();
+                                        });
                                     } else {
-                                        this.selectedColumns = this.selectedColumns.filter(
-                                            col => col !== func
-                                        );
+                                        this.selectedColumns = this.selectedColumns.filter(col => col !== func);
+                                        
+                                        const existingAlias = countOption.nextElementSibling;
+                                        if (existingAlias && existingAlias.classList.contains('alias-input-group')) {
+                                            this.selectColumnsEl.removeChild(existingAlias);
+                                            delete this.columnAliases[func];
+                                        }
                                     }
                                     
                                     this.updateSqlPreview();
@@ -885,10 +1280,41 @@
                                             
                                             if (funcOption.classList.contains('selected')) {
                                                 this.selectedColumns.push(funcText);
+                                                
+                                                // Create alias input
+                                                const aliasGroup = document.createElement('div');
+                                                aliasGroup.className = 'alias-input-group input-group input-group-sm mb-2';
+                                                aliasGroup.innerHTML = `
+                                                    <span class="input-group-text">AS</span>
+                                                    <input type="text" class="form-control alias-input" 
+                                                        placeholder="${func}_${colName}" data-column="${funcText}">
+                                                `;
+                                                
+                                                // Insert alias input after the column element
+                                                if (funcOption.nextElementSibling) {
+                                                    this.selectColumnsEl.insertBefore(aliasGroup, funcOption.nextElementSibling);
+                                                } else {
+                                                    this.selectColumnsEl.appendChild(aliasGroup);
+                                                }
+                                                
+                                                // Add event listener for alias input
+                                                const aliasInput = aliasGroup.querySelector('.alias-input');
+                                                aliasInput.addEventListener('input', () => {
+                                                    if (aliasInput.value.trim()) {
+                                                        this.columnAliases[funcText] = aliasInput.value.trim();
+                                                    } else {
+                                                        delete this.columnAliases[funcText];
+                                                    }
+                                                    this.updateSqlPreview();
+                                                });
                                             } else {
-                                                this.selectedColumns = this.selectedColumns.filter(
-                                                    col => col !== funcText
-                                                );
+                                                this.selectedColumns = this.selectedColumns.filter(col => col !== funcText);
+                                                
+                                                const existingAlias = funcOption.nextElementSibling;
+                                                if (existingAlias && existingAlias.classList.contains('alias-input-group')) {
+                                                    this.selectColumnsEl.removeChild(existingAlias);
+                                                    delete this.columnAliases[funcText];
+                                                }
                                             }
                                             
                                             this.updateSqlPreview();
@@ -907,9 +1333,17 @@
                 updateSqlPreview() {
                     let sql = 'SELECT ';
                     
-                    // Add columns
-                    if (this.selectedColumns.length > 0) {
-                        sql += this.selectedColumns.join(', ');
+                    // Combine all columns (selected and join columns)
+                    const allColumns = [...this.selectedColumns, ...this.joinColumns];
+                    
+                    // Add columns with their aliases if applicable
+                    if (allColumns.length > 0) {
+                        sql += allColumns.map(col => {
+                            if (this.columnAliases[col]) {
+                                return `${col} AS ${this.columnAliases[col]}`;
+                            }
+                            return col;
+                        }).join(', ');
                     } else {
                         sql += '*';
                     }
@@ -957,6 +1391,8 @@
                     this.joinType = 'INNER JOIN';
                     this.joinTable = '';
                     this.joinCondition = '';
+                    this.joinColumns = [];
+                    this.columnAliases = {};
                     this.whereCondition = '';
                     this.groupColumns = [];
                     this.havingCondition = '';
@@ -970,6 +1406,7 @@
                     this.joinTypeEl.value = 'INNER JOIN';
                     this.joinTableEl.value = '';
                     this.joinConditionEl.value = '';
+                    this.joinColumnsEl.innerHTML = '';
                     this.whereConditionEl.value = '';
                     this.havingConditionEl.value = '';
                     this.orderColumnEl.value = '';
@@ -1651,6 +2088,455 @@
                     }, 500);
                 });
             }
+        }
+
+        // Function to set up custom table creation and custom SQL execution
+        function setupCustomTableAndSql(db) {
+            // Create Table Button
+            const createTableBtn = document.getElementById('create-table-btn');
+            const createTableModal = new bootstrap.Modal(document.getElementById('createTableModal'));
+            
+            createTableBtn.addEventListener('click', () => {
+                createTableModal.show();
+            });
+            
+            // Custom SQL Button
+            const customSqlBtn = document.getElementById('custom-sql-btn');
+            const customSqlModal = new bootstrap.Modal(document.getElementById('customSqlModal'));
+            
+            customSqlBtn.addEventListener('click', () => {
+                customSqlModal.show();
+            });
+            
+            // Add Column Button
+            const addColumnBtn = document.getElementById('add-column');
+            const columnsContainer = document.getElementById('columns-container');
+            
+            addColumnBtn.addEventListener('click', () => {
+                const columnRow = document.createElement('div');
+                columnRow.className = 'column-row row mb-2';
+                columnRow.innerHTML = `
+                    <div class="col-md-4">
+                        <input type="text" class="form-control column-name" placeholder="Column name">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select column-type">
+                            <option value="INTEGER">INTEGER</option>
+                            <option value="TEXT">TEXT</option>
+                            <option value="REAL">REAL</option>
+                            <option value="BLOB">BLOB</option>
+                            <option value="NUMERIC">NUMERIC</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-check">
+                            <input class="form-check-input column-pk" type="checkbox">
+                            <label class="form-check-label">Primary Key</label>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-outline-danger remove-column">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                columnsContainer.appendChild(columnRow);
+                
+                // Add event listener to remove button
+                const removeBtn = columnRow.querySelector('.remove-column');
+                removeBtn.addEventListener('click', () => {
+                    columnsContainer.removeChild(columnRow);
+                });
+            });
+            
+            // Add event listeners to initial remove column button
+            const initialRemoveBtn = document.querySelector('.remove-column');
+            if (initialRemoveBtn) {
+                initialRemoveBtn.addEventListener('click', () => {
+                    const columnRow = initialRemoveBtn.closest('.column-row');
+                    if (columnsContainer.children.length > 1) {
+                        columnsContainer.removeChild(columnRow);
+                    } else {
+                        showToast('You need at least one column', 'warning');
+                    }
+                });
+            }
+            
+            // Create Table Submit Button
+            const createTableSubmitBtn = document.getElementById('create-table-submit');
+            
+            createTableSubmitBtn.addEventListener('click', () => {
+                const tableName = document.getElementById('table-name').value.trim();
+                
+                if (!tableName) {
+                    showToast('Table name is required', 'warning');
+                    return;
+                }
+                
+                // Get all column rows
+                const columnRows = document.querySelectorAll('.column-row');
+                const columns = [];
+                
+                let hasPrimaryKey = false;
+                
+                // Validate and extract column data
+                for (let i = 0; i < columnRows.length; i++) {
+                    const row = columnRows[i];
+                    const columnName = row.querySelector('.column-name').value.trim();
+                    const columnType = row.querySelector('.column-type').value;
+                    const isPrimaryKey = row.querySelector('.column-pk').checked;
+                    
+                    if (!columnName) {
+                        showToast(`Column ${i+1} name is required`, 'warning');
+                        return;
+                    }
+                    
+                    columns.push({
+                        name: columnName,
+                        type: columnType,
+                        primaryKey: isPrimaryKey
+                    });
+                    
+                    if (isPrimaryKey) {
+                        hasPrimaryKey = true;
+                    }
+                }
+                
+                // Generate CREATE TABLE SQL
+                let createTableSQL = `CREATE TABLE ${tableName} (`;
+                
+                columns.forEach((column, index) => {
+                    createTableSQL += `${column.name} ${column.type}`;
+                    
+                    if (column.primaryKey) {
+                        createTableSQL += ' PRIMARY KEY';
+                    }
+                    
+                    if (index < columns.length - 1) {
+                        createTableSQL += ', ';
+                    }
+                });
+                
+                createTableSQL += ')';
+                
+                // Execute CREATE TABLE
+                try {
+                    db.run(createTableSQL);
+                    
+                    // Close modal and show success message
+                    createTableModal.hide();
+                    showToast(`Table ${tableName} created successfully`, 'success');
+                    
+                    // Reset form
+                    document.getElementById('table-name').value = '';
+                    document.querySelectorAll('.column-row').forEach((row, index) => {
+                        if (index > 0) {
+                            columnsContainer.removeChild(row);
+                        } else {
+                            row.querySelector('.column-name').value = '';
+                            row.querySelector('.column-type').value = 'INTEGER';
+                            row.querySelector('.column-pk').checked = false;
+                        }
+                    });
+                    
+                    // Refresh schema display
+                    displayDatabaseSchema(db);
+                    
+                    // Update relationship diagram
+                    displayRelationshipDiagram();
+                    
+                    // Refresh query builder
+                    const builder = new SQLQueryBuilder(db);
+                    builder.populateTables();
+                    
+                    // Show insert data dialog
+                    showInsertDataDialog(db, tableName, columns);
+                } catch (error) {
+                    showToast(`Error creating table: ${error.message}`, 'danger');
+                }
+            });
+            
+            // Run Custom SQL Button
+            const runCustomSqlBtn = document.getElementById('run-custom-sql');
+            
+            runCustomSqlBtn.addEventListener('click', () => {
+                const sqlQuery = document.getElementById('custom-sql').value.trim();
+                
+                if (!sqlQuery) {
+                    showToast('SQL query is required', 'warning');
+                    return;
+                }
+                
+                try {
+                    // Execute the query
+                    const results = db.exec(sqlQuery);
+                    
+                    // Determine query type (SELECT, INSERT, UPDATE, DELETE, CREATE, etc.)
+                    const queryType = sqlQuery.trim().toUpperCase().split(' ')[0];
+                    
+                    // Close modal
+                    customSqlModal.hide();
+                    
+                    if (queryType === 'SELECT') {
+                        // Display results
+                        const resultsContent = document.getElementById('results-content');
+                        
+                        if (results.length === 0) {
+                            resultsContent.innerHTML = `
+                                <div class="alert alert-info">
+                                    Query executed successfully. No results returned.
+                                </div>
+                            `;
+                        } else {
+                            // Get query results
+                            const columns = results[0].columns;
+                            const values = results[0].values;
+                            
+                            // Create table for results
+                            let tableHtml = `
+                                <div class="table-container">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                            `;
+                            
+                            // Add table headers
+                            columns.forEach(col => {
+                                tableHtml += `<th>${col}</th>`;
+                            });
+                            
+                            tableHtml += `
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                            `;
+                            
+                            // Add table rows
+                            values.forEach(row => {
+                                tableHtml += '<tr>';
+                                row.forEach(cell => {
+                                    tableHtml += `<td>${cell !== null ? cell : 'NULL'}</td>`;
+                                });
+                                tableHtml += '</tr>';
+                            });
+                            
+                            tableHtml += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <p>${values.length} row(s) returned</p>
+                            `;
+                            
+                            resultsContent.innerHTML = tableHtml;
+                        }
+                        
+                        showToast('Query executed successfully', 'success');
+                    } else {
+                        // For non-SELECT queries
+                        showToast('Query executed successfully', 'success');
+                        
+                        // If it's a schema-changing query, refresh tables
+                        if (queryType === 'CREATE' || queryType === 'DROP' || queryType === 'ALTER') {
+                            // Refresh schema display
+                            displayDatabaseSchema(db);
+                            
+                            // Update relationship diagram
+                            displayRelationshipDiagram();
+                            
+                            // Refresh query builder
+                            const builder = new SQLQueryBuilder(db);
+                            builder.populateTables();
+                        }
+                    }
+                    
+                    // Clear the SQL input
+                    document.getElementById('custom-sql').value = '';
+                } catch (error) {
+                    showToast(`Error executing query: ${error.message}`, 'danger');
+                }
+            });
+        }
+        
+        // Function to show dialog for inserting data
+        function showInsertDataDialog(db, tableName, columns) {
+            // Create modal HTML
+            const modalHtml = `
+                <div class="modal fade" id="insertDataModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Insert Data into ${tableName}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <p>Add sample data to your new table</p>
+                                    <table class="table" id="insert-data-table">
+                                        <thead>
+                                            <tr>
+                                                ${columns.map(col => `<th>${col.name}</th>`).join('')}
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="insert-data-tbody">
+                                            <tr>
+                                                ${columns.map(col => {
+                                                    if (col.type === 'INTEGER' || col.type === 'REAL' || col.type === 'NUMERIC') {
+                                                        return `<td><input type="number" class="form-control insert-data-value" data-column="${col.name}" data-type="${col.type}"></td>`;
+                                                    } else {
+                                                        return `<td><input type="text" class="form-control insert-data-value" data-column="${col.name}" data-type="${col.type}"></td>`;
+                                                    }
+                                                }).join('')}
+                                                <td>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm remove-row">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <button type="button" id="add-data-row" class="btn btn-outline-primary mt-2">
+                                        <i class="fas fa-plus me-1"></i>Add Row
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" id="insert-data-submit" class="btn btn-primary">Insert Data</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add modal to document
+            const modalContainer = document.createElement('div');
+            modalContainer.innerHTML = modalHtml;
+            document.body.appendChild(modalContainer);
+            
+            // Initialize and show modal
+            const insertDataModal = new bootstrap.Modal(document.getElementById('insertDataModal'));
+            insertDataModal.show();
+            
+            // Add event listener for adding rows
+            const addDataRowBtn = document.getElementById('add-data-row');
+            const insertDataTbody = document.getElementById('insert-data-tbody');
+            
+            addDataRowBtn.addEventListener('click', () => {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    ${columns.map(col => {
+                        if (col.type === 'INTEGER' || col.type === 'REAL' || col.type === 'NUMERIC') {
+                            return `<td><input type="number" class="form-control insert-data-value" data-column="${col.name}" data-type="${col.type}"></td>`;
+                        } else {
+                            return `<td><input type="text" class="form-control insert-data-value" data-column="${col.name}" data-type="${col.type}"></td>`;
+                        }
+                    }).join('')}
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm remove-row">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                `;
+                
+                insertDataTbody.appendChild(newRow);
+                
+                // Add event listener to remove button
+                const removeBtn = newRow.querySelector('.remove-row');
+                removeBtn.addEventListener('click', () => {
+                    insertDataTbody.removeChild(newRow);
+                });
+            });
+            
+            // Add event listeners to initial remove row button
+            const initialRemoveBtn = document.querySelector('#insert-data-tbody .remove-row');
+            if (initialRemoveBtn) {
+                initialRemoveBtn.addEventListener('click', () => {
+                    const row = initialRemoveBtn.closest('tr');
+                    if (insertDataTbody.children.length > 1) {
+                        insertDataTbody.removeChild(row);
+                    } else {
+                        showToast('You need at least one row', 'warning');
+                    }
+                });
+            }
+            
+            // Add event listener for inserting data
+            const insertDataSubmitBtn = document.getElementById('insert-data-submit');
+            
+            insertDataSubmitBtn.addEventListener('click', () => {
+                const rows = document.querySelectorAll('#insert-data-tbody tr');
+                const dataToInsert = [];
+                
+                // Validate and extract data
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const rowData = {};
+                    let isEmptyRow = true;
+                    
+                    // Get values for each column
+                    const inputs = row.querySelectorAll('.insert-data-value');
+                    inputs.forEach(input => {
+                        const columnName = input.dataset.column;
+                        const columnType = input.dataset.type;
+                        let value = input.value.trim();
+                        
+                        if (value !== '') {
+                            isEmptyRow = false;
+                            
+                            // Convert to appropriate type
+                            if (columnType === 'INTEGER') {
+                                value = parseInt(value);
+                            } else if (columnType === 'REAL' || columnType === 'NUMERIC') {
+                                value = parseFloat(value);
+                            }
+                        } else {
+                            value = null;
+                        }
+                        
+                        rowData[columnName] = value;
+                    });
+                    
+                    if (!isEmptyRow) {
+                        dataToInsert.push(rowData);
+                    }
+                }
+                
+                if (dataToInsert.length === 0) {
+                    showToast('No data to insert', 'warning');
+                    return;
+                }
+                
+                // Insert data
+                try {
+                    dataToInsert.forEach(rowData => {
+                        const columnNames = Object.keys(rowData);
+                        const placeholders = columnNames.map(() => '?').join(', ');
+                        const values = columnNames.map(col => rowData[col]);
+                        
+                        const insertSQL = `INSERT INTO ${tableName} (${columnNames.join(', ')}) VALUES (${placeholders})`;
+                        db.run(insertSQL, values);
+                    });
+                    
+                    // Close modal and show success message
+                    insertDataModal.hide();
+                    showToast(`${dataToInsert.length} row(s) inserted into ${tableName}`, 'success');
+                    
+                    // Refresh schema display to show sample data
+                    displayDatabaseSchema(db);
+                    
+                    // Remove modal from DOM after hiding
+                    document.body.removeChild(modalContainer);
+                } catch (error) {
+                    showToast(`Error inserting data: ${error.message}`, 'danger');
+                }
+            });
+            
+            // Clean up modal when hidden
+            document.getElementById('insertDataModal').addEventListener('hidden.bs.modal', () => {
+                document.body.removeChild(modalContainer);
+            });
         }
     </script>
 </body>
