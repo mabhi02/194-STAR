@@ -744,9 +744,11 @@
                 constructor(db) {
                     this.db = db;
                     this.selectedTable = '';
+                    this.tableAlias = '';
                     this.selectedColumns = [];
                     this.joinType = 'INNER JOIN';
                     this.joinTable = '';
+                    this.joinTableAlias = '';
                     this.joinCondition = '';
                     this.joinColumns = [];
                     this.columnAliases = {};
@@ -804,6 +806,35 @@
                     // Add event listeners for form controls
                     this.selectTableEl.addEventListener('change', () => {
                         this.selectedTable = this.selectTableEl.value;
+                        // Add alias input for table
+                        if (this.selectedTable) {
+                            // Check if alias input already exists
+                            let aliasInput = document.getElementById('table-alias-input');
+                            if (!aliasInput) {
+                                const aliasGroup = document.createElement('div');
+                                aliasGroup.className = 'mb-3 mt-2';
+                                aliasGroup.innerHTML = `
+                                    <label>Table Alias:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">AS</span>
+                                        <input type="text" id="table-alias-input" class="form-control" 
+                                            placeholder="t" value="">
+                                    </div>
+                                `;
+                                this.selectTableEl.parentNode.appendChild(aliasGroup);
+                                
+                                // Add event listener for alias input
+                                document.getElementById('table-alias-input').addEventListener('input', (e) => {
+                                    this.tableAlias = e.target.value.trim();
+                                    this.populateColumns();
+                                    this.updateSqlPreview();
+                                });
+                            } else {
+                                // Reset alias input
+                                aliasInput.value = '';
+                                this.tableAlias = '';
+                            }
+                        }
                         this.populateColumns();
                         this.updateSqlPreview();
                     });
@@ -815,6 +846,35 @@
                     
                     this.joinTableEl.addEventListener('change', () => {
                         this.joinTable = this.joinTableEl.value;
+                        // Add alias input for join table
+                        if (this.joinTable) {
+                            // Check if alias input already exists
+                            let aliasInput = document.getElementById('join-table-alias-input');
+                            if (!aliasInput) {
+                                const aliasGroup = document.createElement('div');
+                                aliasGroup.className = 'mb-3 mt-2';
+                                aliasGroup.innerHTML = `
+                                    <label>Join Table Alias:</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">AS</span>
+                                        <input type="text" id="join-table-alias-input" class="form-control" 
+                                            placeholder="j" value="">
+                                    </div>
+                                `;
+                                this.joinTableEl.parentNode.appendChild(aliasGroup);
+                                
+                                // Add event listener for alias input
+                                document.getElementById('join-table-alias-input').addEventListener('input', (e) => {
+                                    this.joinTableAlias = e.target.value.trim();
+                                    this.populateJoinColumns();
+                                    this.updateSqlPreview();
+                                });
+                            } else {
+                                // Reset alias input
+                                aliasInput.value = '';
+                                this.joinTableAlias = '';
+                            }
+                        }
                         this.populateJoinColumns();
                         this.updateSqlPreview();
                     });
@@ -885,6 +945,9 @@
                     
                     if (!this.joinTable) return;
                     
+                    // Use alias if available, otherwise use table name
+                    const tableRef = this.joinTableAlias || this.joinTable;
+                    
                     // Get columns for the joined table
                     try {
                         const pragma = this.db.exec(`PRAGMA table_info(${this.joinTable})`)[0];
@@ -897,12 +960,12 @@
                             // Create column option element
                             const columnEl = document.createElement('div');
                             columnEl.className = 'column-option';
-                            columnEl.dataset.column = `${this.joinTable}.${colName}`;
-                            columnEl.textContent = `${this.joinTable}.${colName}`;
+                            columnEl.dataset.column = `${tableRef}.${colName}`;
+                            columnEl.textContent = `${tableRef}.${colName}`;
                             
                             // Add click event to toggle selection and show alias input
                             columnEl.addEventListener('click', (e) => {
-                                const fullColName = `${this.joinTable}.${colName}`;
+                                const fullColName = `${tableRef}.${colName}`;
                                 
                                 if (columnEl.classList.contains('selected')) {
                                     // If already selected, remove selection and alias input if exists
@@ -971,7 +1034,7 @@
                             if (func === 'COUNT(*)') {
                                 const countOption = document.createElement('div');
                                 countOption.className = 'column-option';
-                                const funcText = `COUNT(${this.joinTable}.*)`;
+                                const funcText = `COUNT(${tableRef}.*)`;
                                 countOption.dataset.column = funcText;
                                 countOption.textContent = funcText;
                                 
@@ -1033,7 +1096,7 @@
                                         
                                         const funcOption = document.createElement('div');
                                         funcOption.className = 'column-option';
-                                        const funcText = `${func}(${this.joinTable}.${colName})`;
+                                        const funcText = `${func}(${tableRef}.${colName})`;
                                         funcOption.dataset.column = funcText;
                                         funcOption.textContent = funcText;
                                         
@@ -1101,6 +1164,9 @@
                     
                     if (!this.selectedTable) return;
                     
+                    // Use alias if available, otherwise use table name
+                    const tableRef = this.tableAlias || this.selectedTable;
+                    
                     // Get columns for the selected table
                     try {
                         const pragma = this.db.exec(`PRAGMA table_info(${this.selectedTable})`)[0];
@@ -1113,12 +1179,12 @@
                             // Create column option element for SELECT
                             const columnEl = document.createElement('div');
                             columnEl.className = 'column-option';
-                            columnEl.dataset.column = `${this.selectedTable}.${colName}`;
-                            columnEl.textContent = `${this.selectedTable}.${colName}`;
+                            columnEl.dataset.column = `${tableRef}.${colName}`;
+                            columnEl.textContent = `${tableRef}.${colName}`;
                             
                             // Add click event to toggle selection and show alias input
                             columnEl.addEventListener('click', () => {
-                                const fullColName = `${this.selectedTable}.${colName}`;
+                                const fullColName = `${tableRef}.${colName}`;
                                 
                                 if (columnEl.classList.contains('selected')) {
                                     // If already selected, remove selection and alias input if exists
@@ -1171,18 +1237,18 @@
                             // Create column option element for GROUP BY
                             const groupColumnEl = document.createElement('div');
                             groupColumnEl.className = 'column-option';
-                            groupColumnEl.dataset.column = `${this.selectedTable}.${colName}`;
-                            groupColumnEl.textContent = `${this.selectedTable}.${colName}`;
+                            groupColumnEl.dataset.column = `${tableRef}.${colName}`;
+                            groupColumnEl.textContent = `${tableRef}.${colName}`;
                             
                             // Add click event to toggle group by selection
                             groupColumnEl.addEventListener('click', () => {
                                 groupColumnEl.classList.toggle('selected');
                                 
                                 if (groupColumnEl.classList.contains('selected')) {
-                                    this.groupColumns.push(`${this.selectedTable}.${colName}`);
+                                    this.groupColumns.push(`${tableRef}.${colName}`);
                                 } else {
                                     this.groupColumns = this.groupColumns.filter(
-                                        col => col !== `${this.selectedTable}.${colName}`
+                                        col => col !== `${tableRef}.${colName}`
                                     );
                                 }
                                 
@@ -1271,7 +1337,7 @@
                                         
                                         const funcOption = document.createElement('div');
                                         funcOption.className = 'column-option';
-                                        const funcText = `${func}(${this.selectedTable}.${colName})`;
+                                        const funcText = `${func}(${tableRef}.${colName})`;
                                         funcOption.dataset.column = funcText;
                                         funcOption.textContent = funcText;
                                         
@@ -1348,16 +1414,23 @@
                         sql += '*';
                     }
                     
-                    // Add FROM clause
+                    // Add FROM clause with table alias if applicable
                     if (this.selectedTable) {
                         sql += ` FROM ${this.selectedTable}`;
+                        if (this.tableAlias) {
+                            sql += ` AS ${this.tableAlias}`;
+                        }
                     } else {
                         sql += ' FROM table';
                     }
                     
-                    // Add JOIN clause
+                    // Add JOIN clause with table alias if applicable
                     if (this.joinTable && this.joinCondition) {
-                        sql += `\n${this.joinType} ${this.joinTable}\nON ${this.joinCondition}`;
+                        sql += `\n${this.joinType} ${this.joinTable}`;
+                        if (this.joinTableAlias) {
+                            sql += ` AS ${this.joinTableAlias}`;
+                        }
+                        sql += `\nON ${this.joinCondition}`;
                     }
                     
                     // Add WHERE clause
@@ -1387,9 +1460,11 @@
                 resetBuilder() {
                     // Reset all fields
                     this.selectedTable = '';
+                    this.tableAlias = '';
                     this.selectedColumns = [];
                     this.joinType = 'INNER JOIN';
                     this.joinTable = '';
+                    this.joinTableAlias = '';
                     this.joinCondition = '';
                     this.joinColumns = [];
                     this.columnAliases = {};
@@ -1411,6 +1486,17 @@
                     this.havingConditionEl.value = '';
                     this.orderColumnEl.value = '';
                     this.orderDirectionEl.value = 'ASC';
+                    
+                    // Remove table alias inputs if they exist
+                    const tableAliasInput = document.getElementById('table-alias-input');
+                    if (tableAliasInput) {
+                        tableAliasInput.parentNode.parentNode.remove();
+                    }
+                    
+                    const joinTableAliasInput = document.getElementById('join-table-alias-input');
+                    if (joinTableAliasInput) {
+                        joinTableAliasInput.parentNode.parentNode.remove();
+                    }
                     
                     // Update SQL preview
                     this.updateSqlPreview();
