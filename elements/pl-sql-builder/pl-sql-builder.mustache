@@ -1,0 +1,157 @@
+<div class="sql-builder" id="pl-sql-builder-{{uuid}}" data-schema="{{schema}}" data-init-sql="{{init_sql}}">
+    <div class="sb-instructions">
+        <p><strong>How to use the SQL Builder:</strong></p>
+        <ul>
+            <li>Select a table from the dropdown menu to start building your query.</li>
+            <li>Choose columns you want to include in your SELECT statement.</li>
+            <li>Use the JOIN tab to add table joins with conditions.</li>
+            <li>Add WHERE conditions to filter your results.</li>
+            <li>Use GROUP BY and HAVING for aggregation.</li>
+            <li>Order your results using ORDER BY.</li>
+            <li>Click "Run Query" to execute and see results.</li>
+        </ul>
+    </div>
+
+    <div class="controls">
+        <div class="d-flex justify-content-end mb-3">
+            <button id="reset-builder-{{uuid}}" class="btn btn-outline-secondary btn-sm me-2">
+                <i class="fas fa-undo me-1"></i>Reset Builder
+            </button>
+        </div>
+
+        <ul class="nav nav-tabs" id="builder-tabs-{{uuid}}">
+            <li class="nav-item">
+                <a class="nav-link active" id="select-tab-{{uuid}}" data-bs-toggle="tab" href="#select-content-{{uuid}}">SELECT</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="join-tab-{{uuid}}" data-bs-toggle="tab" href="#join-content-{{uuid}}">JOIN</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="where-tab-{{uuid}}" data-bs-toggle="tab" href="#where-content-{{uuid}}">WHERE</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="group-tab-{{uuid}}" data-bs-toggle="tab" href="#group-content-{{uuid}}">GROUP BY</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="order-tab-{{uuid}}" data-bs-toggle="tab" href="#order-content-{{uuid}}">ORDER BY</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <!-- SELECT Tab -->
+            <div class="tab-pane fade show active" id="select-content-{{uuid}}">
+                <div class="builder-section">
+                    <label>Select Table:</label>
+                    <select id="select-table-{{uuid}}" class="form-select">
+                        <option value="">-- Select a table --</option>
+                    </select>
+                </div>
+                
+                <div class="builder-section">
+                    <label>Select Columns:</label>
+                    <div id="select-columns-{{uuid}}" class="column-selector">
+                        <!-- Columns will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- JOIN Tab -->
+            <div class="tab-pane fade" id="join-content-{{uuid}}">
+                <div class="builder-section">
+                    <label>Join Type:</label>
+                    <select id="join-type-{{uuid}}" class="form-select">
+                        <option value="INNER JOIN">INNER JOIN</option>
+                        <option value="LEFT JOIN">LEFT JOIN</option>
+                        <option value="RIGHT JOIN">RIGHT JOIN</option>
+                        <option value="FULL JOIN">FULL JOIN</option>
+                    </select>
+                </div>
+                
+                <div class="builder-section">
+                    <label>Join Table:</label>
+                    <select id="join-table-{{uuid}}" class="form-select">
+                        <option value="">-- Select a table --</option>
+                    </select>
+                </div>
+                
+                <div class="builder-section">
+                    <label>Join Condition:</label>
+                    <input type="text" id="join-condition-{{uuid}}" class="form-control" placeholder="e.g., table1.column = table2.column">
+                </div>
+            </div>
+
+            <!-- WHERE Tab -->
+            <div class="tab-pane fade" id="where-content-{{uuid}}">
+                <div class="builder-section">
+                    <label>WHERE Condition:</label>
+                    <input type="text" id="where-condition-{{uuid}}" class="form-control" placeholder="e.g., column > 100">
+                </div>
+            </div>
+
+            <!-- GROUP BY Tab -->
+            <div class="tab-pane fade" id="group-content-{{uuid}}">
+                <div class="builder-section">
+                    <label>GROUP BY Columns:</label>
+                    <div id="group-columns-{{uuid}}" class="column-selector">
+                        <!-- Columns will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="builder-section">
+                    <label>HAVING Condition:</label>
+                    <input type="text" id="having-condition-{{uuid}}" class="form-control" placeholder="e.g., COUNT(*) > 5">
+                </div>
+            </div>
+
+            <!-- ORDER BY Tab -->
+            <div class="tab-pane fade" id="order-content-{{uuid}}">
+                <div class="builder-section">
+                    <label>ORDER BY Column:</label>
+                    <select id="order-column-{{uuid}}" class="form-select">
+                        <option value="">-- Select a column --</option>
+                    </select>
+                </div>
+                
+                <div class="builder-section">
+                    <label>Order Direction:</label>
+                    <select id="order-direction-{{uuid}}" class="form-select">
+                        <option value="ASC">Ascending</option>
+                        <option value="DESC">Descending</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sql-preview mt-3">
+        <h5>SQL Preview:</h5>
+        <pre id="sql-preview-{{uuid}}" class="bg-light p-3 rounded"></pre>
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+        <button id="run-builder-query-{{uuid}}" class="btn btn-primary">
+            <i class="fas fa-play me-1"></i>Run Query
+        </button>
+    </div>
+
+    <div class="results mt-3">
+        <h5>Results:</h5>
+        <div id="query-results-{{uuid}}" class="table-responsive">
+            <!-- Results will be displayed here -->
+        </div>
+    </div>
+
+    <div class="schema-info mt-4">
+        <h5>Database Schema:</h5>
+        <div id="schema-tables-{{uuid}}">
+            <!-- Schema tables will be displayed here -->
+        </div>
+    </div>
+
+    <div class="table-relation-diagram mt-4">
+        <h5>Table Relationships:</h5>
+        <div id="table-relation-diagram-{{uuid}}">
+            <!-- Relationship diagram will be displayed here -->
+        </div>
+    </div>
+</div> 

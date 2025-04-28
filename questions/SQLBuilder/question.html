@@ -1,0 +1,34 @@
+<pl-question-panel>
+    <p>
+        You are working with a database that contains information about books and book orders. The database has two tables:
+    </p>
+    
+    <ul>
+        <li><code>books</code>: Contains book information including ID, title, price, publication year, and author ID</li>
+        <li><code>book_orders</code>: Contains order information including order ID, book ID, quantity, and order date</li>
+    </ul>
+
+    <p>
+        Use the SQL Builder below to answer the following questions:
+    </p>
+
+    <pl-sql-builder schema='[{"name": "books", "columns": [{"name": "id", "type": "INTEGER", "primaryKey": true}, {"name": "title", "type": "TEXT"}, {"name": "price", "type": "REAL"}, {"name": "publication_year", "type": "INTEGER"}, {"name": "author_id", "type": "INTEGER"}]}, {"name": "book_orders", "columns": [{"name": "id", "type": "INTEGER", "primaryKey": true}, {"name": "book_id", "type": "INTEGER", "foreignKey": {"table": "books", "column": "id"}}, {"name": "quantity", "type": "INTEGER"}, {"name": "order_date", "type": "TEXT"}]}]' init-sql="INSERT INTO books VALUES (1, 'SQL Fundamentals', 29.99, 2020, 1); INSERT INTO books VALUES (2, 'Advanced SQL', 49.99, 2021, 1); INSERT INTO books VALUES (3, 'Database Design', 39.99, 2019, 2); INSERT INTO books VALUES (4, 'Web Development Basics', 24.99, 2022, 3); INSERT INTO books VALUES (5, 'Python Programming', 34.99, 2021, 4); INSERT INTO books VALUES (6, 'JavaScript Mastery', 44.99, 2022, 3); INSERT INTO books VALUES (7, 'Data Science Essentials', 54.99, 2020, 5); INSERT INTO books VALUES (8, 'Machine Learning', 59.99, 2021, 5); INSERT INTO book_orders VALUES (1, 1, 3, '2023-01-15'); INSERT INTO book_orders VALUES (2, 2, 1, '2023-01-20'); INSERT INTO book_orders VALUES (3, 3, 2, '2023-02-05'); INSERT INTO book_orders VALUES (4, 4, 1, '2023-02-10'); INSERT INTO book_orders VALUES (5, 5, 4, '2023-03-15'); INSERT INTO book_orders VALUES (6, 6, 2, '2023-03-20'); INSERT INTO book_orders VALUES (7, 1, 1, '2023-04-10'); INSERT INTO book_orders VALUES (8, 2, 2, '2023-04-15'); INSERT INTO book_orders VALUES (9, 7, 3, '2023-05-05'); INSERT INTO book_orders VALUES (10, 8, 1, '2023-05-10');"></pl-sql-builder>
+
+    <p>
+        <strong>Question 1 (Easy):</strong> Find the title, price, and publication year for all books with a price between 20 and 50 inclusive.
+    </p>
+
+    <pl-string-input answers-name="query1" label="Your SQL Query:" size="50"></pl-string-input>
+
+    <p>
+        <strong>Question 2 (Medium):</strong> Find the title, order date, and quantity for all book orders where the book price is greater than 40.
+    </p>
+
+    <pl-string-input answers-name="query2" label="Your SQL Query:" size="50"></pl-string-input>
+
+    <p>
+        <strong>Question 3 (Hard):</strong> Find the title, order date, and quantity for all book orders where the book price is greater than 20. Order the results by order date in descending order.
+    </p>
+
+    <pl-string-input answers-name="query3" label="Your SQL Query:" size="50"></pl-string-input>
+</pl-question-panel> 
