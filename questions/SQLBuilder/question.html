@@ -4,8 +4,8 @@
     </p>
     
     <ul>
-        <li><code>customers</code>: Contains customer information including ID, name, and email</li>
-        <li><code>orders</code>: Contains order information including ID, customer ID, amount, and order date</li>
+        <li><code>customers</code>: Contains customer information including ID, first name, last name, email, city, state, country, and registration date</li>
+        <li><code>orders</code>: Contains order information including order ID, customer ID, order date, total amount, and status</li>
         <li><code>books</code>: Contains book information including ID, title, price, publication year, and author ID</li>
         <li><code>book_orders</code>: Contains book order information including ID, book ID, quantity, and order date</li>
     </ul>
@@ -17,15 +17,21 @@
     <pl-sql-builder 
         schema='[
             {"name": "customers", "columns": [
-                {"name": "id", "type": "INTEGER", "primaryKey": true},
-                {"name": "name", "type": "TEXT"},
-                {"name": "email", "type": "TEXT"}
+                {"name": "customer_id", "type": "INTEGER", "primaryKey": true},
+                {"name": "first_name", "type": "TEXT"},
+                {"name": "last_name", "type": "TEXT"},
+                {"name": "email", "type": "TEXT"},
+                {"name": "city", "type": "TEXT"},
+                {"name": "state", "type": "TEXT"},
+                {"name": "country", "type": "TEXT"},
+                {"name": "registration_date", "type": "TEXT"}
             ]},
             {"name": "orders", "columns": [
-                {"name": "id", "type": "INTEGER", "primaryKey": true},
-                {"name": "customer_id", "type": "INTEGER", "foreignKey": {"table": "customers", "column": "id"}},
-                {"name": "amount", "type": "DECIMAL(10,2)"},
-                {"name": "order_date", "type": "DATE"}
+                {"name": "order_id", "type": "INTEGER", "primaryKey": true},
+                {"name": "customer_id", "type": "INTEGER", "foreignKey": {"table": "customers", "column": "customer_id"}},
+                {"name": "order_date", "type": "TEXT"},
+                {"name": "total_amount", "type": "REAL"},
+                {"name": "status", "type": "TEXT"}
             ]},
             {"name": "books", "columns": [
                 {"name": "id", "type": "INTEGER", "primaryKey": true},
@@ -43,15 +49,28 @@
         ]' 
         init-sql="
             -- Insert customers
-            INSERT INTO customers VALUES (1, 'John Doe', 'john@example.com');
-            INSERT INTO customers VALUES (2, 'Jane Smith', 'jane@example.com');
-            INSERT INTO customers VALUES (3, 'Bob Johnson', 'bob@example.com');
+            INSERT INTO customers VALUES (1, 'John', 'Smith', 'john.smith@example.com', 'New York', 'NY', 'USA', '2022-01-15');
+            INSERT INTO customers VALUES (2, 'Emily', 'Johnson', 'emily.j@example.com', 'Toronto', 'ON', 'Canada', '2022-02-20');
+            INSERT INTO customers VALUES (3, 'Michael', 'Williams', 'michael.w@example.com', 'Chicago', 'IL', 'USA', '2022-03-10');
+            INSERT INTO customers VALUES (4, 'Sophia', 'Brown', 'sophia.b@example.com', 'London', 'UK', 'UK', '2022-01-05');
+            INSERT INTO customers VALUES (5, 'Daniel', 'Jones', 'daniel.j@example.com', 'Sydney', 'NSW', 'Australia', '2022-04-12');
+            INSERT INTO customers VALUES (6, 'Olivia', 'Garcia', 'olivia.g@example.com', 'Madrid', 'MD', 'Spain', '2022-02-28');
+            INSERT INTO customers VALUES (7, 'James', 'Miller', 'james.m@example.com', 'Los Angeles', 'CA', 'USA', '2022-05-17');
+            INSERT INTO customers VALUES (8, 'Emma', 'Davis', 'emma.d@example.com', 'Vancouver', 'BC', 'Canada', '2022-06-23');
             
             -- Insert orders
-            INSERT INTO orders VALUES (1, 1, 150.00, '2023-01-01');
-            INSERT INTO orders VALUES (2, 1, 75.00, '2023-02-01');
-            INSERT INTO orders VALUES (3, 2, 200.00, '2023-01-15');
-            INSERT INTO orders VALUES (4, 3, 50.00, '2023-03-01');
+            INSERT INTO orders VALUES (1, 1, '2023-01-10', 1349.98, 'Delivered');
+            INSERT INTO orders VALUES (2, 2, '2023-01-15', 899.99, 'Delivered');
+            INSERT INTO orders VALUES (3, 3, '2023-02-05', 279.98, 'Shipped');
+            INSERT INTO orders VALUES (4, 4, '2023-02-10', 129.99, 'Delivered');
+            INSERT INTO orders VALUES (5, 5, '2023-02-20', 429.98, 'Processing');
+            INSERT INTO orders VALUES (6, 1, '2023-03-05', 139.98, 'Delivered');
+            INSERT INTO orders VALUES (7, 2, '2023-03-15', 249.99, 'Shipped');
+            INSERT INTO orders VALUES (8, 6, '2023-03-20', 159.98, 'Processing');
+            INSERT INTO orders VALUES (9, 7, '2023-04-10', 1099.98, 'Delivered');
+            INSERT INTO orders VALUES (10, 8, '2023-04-12', 229.98, 'Pending');
+            INSERT INTO orders VALUES (11, 3, '2023-05-05', 149.99, 'Shipped');
+            INSERT INTO orders VALUES (12, 4, '2023-05-10', 249.99, 'Delivered');
             
             -- Insert books
             INSERT INTO books VALUES (1, 'SQL Fundamentals', 29.99, 2020, 1);
@@ -83,43 +102,110 @@
     ></pl-sql-builder>
 
     <p>
-        <strong>Question 1:</strong> Find all customers who have placed orders with a total amount greater than $100.
+        <strong>Question 1 (EASY):</strong> Retrieve the first name, last name, and country of all customers.
     </p>
 
     <pl-string-input answers-name="query1" label="Your SQL Query:" size="50"></pl-string-input>
 
     <p>
-        <strong>Question 2:</strong> Find the title, price, and publication year for all books with a price between 20 and 50 inclusive.
+        <strong>Question 2 (EASY):</strong> Find the first name, last name, and city of customers who live in the USA.
     </p>
 
     <pl-string-input answers-name="query2" label="Your SQL Query:" size="50"></pl-string-input>
 
     <p>
-        <strong>Question 3:</strong> Find the title, order date, and quantity for all book orders where the book price is greater than 40.
+        <strong>Question 3 (EASY):</strong> Find the title, price, and publication year for all books with a price greater than 50.
     </p>
 
     <pl-string-input answers-name="query3" label="Your SQL Query:" size="50"></pl-string-input>
+
+    <p>
+        <strong>Question 4 (MEDIUM):</strong> Group customers by country and count how many are from each country.
+    </p>
+
+    <pl-string-input answers-name="query4" label="Your SQL Query:" size="50"></pl-string-input>
+
+    <p>
+        <strong>Question 5 (MEDIUM):</strong> Find the title, order date, and quantity for each book order.
+    </p>
+
+    <pl-string-input answers-name="query5" label="Your SQL Query:" size="50"></pl-string-input>
+
+    <p>
+        <strong>Question 6 (MEDIUM):</strong> Find the title, price, and publication year for all books with a price between 10 and 20 exclusive.
+    </p>
+
+    <pl-string-input answers-name="query6" label="Your SQL Query:" size="50"></pl-string-input>
+
+    <p>
+        <strong>Question 7 (HARD):</strong> Group together books by publication year, and report the publication year, average price, and number of books for each year. Order the results by publication year in ascending order.
+    </p>
+
+    <pl-string-input answers-name="query7" label="Your SQL Query:" size="50"></pl-string-input>
+
+    <p>
+        <strong>Question 8 (HARD):</strong> For each customer, show their full name and total amount spent across all orders.
+    </p>
+
+    <pl-string-input answers-name="query8" label="Your SQL Query:" size="50"></pl-string-input>
+
+    <p>
+        <strong>Question 9 (HARD):</strong> Find customers who have spent more than $500 in total. Show full name and total spent, ordered by total spent descending.
+    </p>
+
+    <pl-string-input answers-name="query9" label="Your SQL Query:" size="50"></pl-string-input>
 </pl-question-panel>
 
 <pl-answer-panel>
     <p>The correct answers are:</p>
     <pl-code language="sql">
         -- Question 1
-        SELECT c.name, c.email, SUM(o.amount) as total_amount
-        FROM customers c
-        JOIN orders o ON c.id = o.customer_id
-        GROUP BY c.id, c.name, c.email
-        HAVING SUM(o.amount) > 100;
+        SELECT first_name, last_name, country
+        FROM customers;
 
         -- Question 2
-        SELECT title, price, publication_year
-        FROM books
-        WHERE price BETWEEN 20 AND 50;
+        SELECT first_name, last_name, city
+        FROM customers
+        WHERE country = 'USA';
 
         -- Question 3
+        SELECT title, price, publication_year
+        FROM books
+        WHERE price > 50;
+
+        -- Question 4
+        SELECT country, COUNT(*) AS customer_count
+        FROM customers
+        GROUP BY country;
+
+        -- Question 5
         SELECT b.title, bo.order_date, bo.quantity
         FROM book_orders bo
-        JOIN books b ON bo.book_id = b.id
-        WHERE b.price > 40;
+        JOIN books b ON bo.book_id = b.id;
+
+        -- Question 6
+        SELECT title, price, publication_year
+        FROM books
+        WHERE price > 10 AND price < 20;
+
+        -- Question 7
+        SELECT publication_year, AVG(price) AS average_price, COUNT(*) AS number_books
+        FROM books
+        GROUP BY publication_year
+        ORDER BY publication_year ASC;
+
+        -- Question 8
+        SELECT c.first_name, c.last_name, SUM(o.total_amount) AS total_spent
+        FROM customers c
+        JOIN orders o ON c.customer_id = o.customer_id
+        GROUP BY c.customer_id, c.first_name, c.last_name;
+
+        -- Question 9
+        SELECT c.first_name, c.last_name, SUM(o.total_amount) AS total_spent
+        FROM customers c
+        JOIN orders o ON c.customer_id = o.customer_id
+        GROUP BY c.customer_id, c.first_name, c.last_name
+        HAVING total_spent > 500
+        ORDER BY total_spent DESC;
     </pl-code>
 </pl-answer-panel> 

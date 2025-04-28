@@ -68,6 +68,7 @@ $(function () {
             this.selectedTable = '';
             this.tableAlias = '';
             this.selectedColumns = [];
+            this.aggregateColumns = []; // Track aggregate columns separately
             this.joinType = 'INNER JOIN';
             this.joinTable = '';
             this.joinTableAlias = '';
@@ -200,9 +201,6 @@ $(function () {
             this.selectColumnsEl.innerHTML = '';
             this.groupColumnsEl.innerHTML = '';
             this.orderColumnsEl.innerHTML = '';
-            this.selectedColumns = [];
-            this.groupColumns = [];
-            this.orderColumns = [];
             
             if (!this.selectedTable) return;
             
@@ -223,8 +221,10 @@ $(function () {
                     funcEl.addEventListener('click', () => {
                         const column = prompt(`Enter column name for ${func}:`);
                         if (column) {
-                            this.selectedColumns.push(`${func}(${this.tableAlias}.${column}) as ${func.toLowerCase()}_${column}`);
+                            const aggColumn = `${func}(${this.tableAlias}.${column}) as ${func.toLowerCase()}_${column}`;
+                            this.aggregateColumns.push(aggColumn);
                             this.updateSqlPreview();
+                            this.updateAggregateColumns();
                         }
                     });
                     aggregateSection.appendChild(funcEl);
@@ -307,6 +307,7 @@ $(function () {
                 });
                 
                 this.selectColumnsEl.appendChild(columnsSection);
+                this.updateAggregateColumns();
             } catch (error) {
                 console.error('Error fetching columns:', error);
             }
@@ -323,12 +324,39 @@ $(function () {
             try {
                 const pragma = this.db.exec(`PRAGMA table_info(${this.joinTable})`)[0];
                 
+                // Add aggregate functions section for join table
+                const aggregateSection = document.createElement('div');
+                aggregateSection.className = 'aggregate-section';
+                aggregateSection.innerHTML = '<h6>Aggregate Functions</h6>';
+                
+                const aggregateFunctions = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX'];
+                aggregateFunctions.forEach(func => {
+                    const funcEl = document.createElement('div');
+                    funcEl.className = 'column-option aggregate';
+                    funcEl.textContent = `${func}()`;
+                    funcEl.addEventListener('click', () => {
+                        const column = prompt(`Enter column name for ${func}:`);
+                        if (column) {
+                            this.selectedColumns.push(`${func}(${this.joinTableAlias}.${column}) as ${func.toLowerCase()}_${column}`);
+                            this.updateSqlPreview();
+                        }
+                    });
+                    aggregateSection.appendChild(funcEl);
+                });
+                
+                this.joinColumnsEl.appendChild(aggregateSection);
+                
+                // Add regular columns section
+                const columnsSection = document.createElement('div');
+                columnsSection.className = 'columns-section';
+                columnsSection.innerHTML = '<h6>Columns</h6>';
+                
                 // Create a clickable option for each column
                 pragma.values.forEach(col => {
                     const colName = col[1];
                     const colType = col[2];
                     
-                    // Create column option element
+                    // Create column option element for JOIN
                     const columnEl = document.createElement('div');
                     columnEl.className = 'column-option';
                     columnEl.dataset.column = colName;
@@ -349,10 +377,93 @@ $(function () {
                         this.updateSqlPreview();
                     });
                     
-                    this.joinColumnsEl.appendChild(columnEl);
+                    columnsSection.appendChild(columnEl);
+                    
+                    // Add to GROUP BY tab
+                    const groupColumnEl = document.createElement('div');
+                    groupColumnEl.className = 'column-option';
+                    groupColumnEl.dataset.column = colName;
+                    groupColumnEl.textContent = `${this.joinTableAlias}.${colName}`;
+                    
+                    groupColumnEl.addEventListener('click', () => {
+                        groupColumnEl.classList.toggle('selected');
+                        
+                        if (groupColumnEl.classList.contains('selected')) {
+                            this.groupColumns.push(`${this.joinTableAlias}.${colName}`);
+                        } else {
+                            this.groupColumns = this.groupColumns.filter(col => col !== `${this.joinTableAlias}.${colName}`);
+                        }
+                        
+                        this.updateSqlPreview();
+                    });
+                    
+                    this.groupColumnsEl.appendChild(groupColumnEl);
+                    
+                    // Add to ORDER BY tab
+                    const orderColumnEl = document.createElement('div');
+                    orderColumnEl.className = 'column-option';
+                    orderColumnEl.dataset.column = colName;
+                    orderColumnEl.textContent = `${this.joinTableAlias}.${colName}`;
+                    
+                    orderColumnEl.addEventListener('click', () => {
+                        orderColumnEl.classList.toggle('selected');
+                        
+                        if (orderColumnEl.classList.contains('selected')) {
+                            this.orderColumns.push(`${this.joinTableAlias}.${colName}`);
+                        } else {
+                            this.orderColumns = this.orderColumns.filter(col => col !== `${this.joinTableAlias}.${colName}`);
+                        }
+                        
+                        this.updateSqlPreview();
+                    });
+                    
+                    this.orderColumnsEl.appendChild(orderColumnEl);
                 });
+                
+                this.joinColumnsEl.appendChild(columnsSection);
             } catch (error) {
                 console.error('Error fetching join columns:', error);
+            }
+        }
+        
+        updateAggregateColumns() {
+            // Find or create the aggregate columns container
+            let aggColumnsContainer = document.querySelector('.aggregate-columns-container');
+            if (!aggColumnsContainer) {
+                aggColumnsContainer = document.createElement('div');
+                aggColumnsContainer.className = 'aggregate-columns-container';
+                this.selectColumnsEl.appendChild(aggColumnsContainer);
+            }
+            
+            // Clear existing aggregate columns
+            aggColumnsContainer.innerHTML = '';
+            
+            if (this.aggregateColumns.length > 0) {
+                const aggHeader = document.createElement('h6');
+                aggHeader.textContent = 'Selected Aggregate Functions';
+                aggColumnsContainer.appendChild(aggHeader);
+                
+                // Add each aggregate column with a remove button
+                this.aggregateColumns.forEach((aggCol, index) => {
+                    const aggColEl = document.createElement('div');
+                    aggColEl.className = 'aggregate-column';
+                    
+                    const aggText = document.createElement('span');
+                    aggText.textContent = aggCol;
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'btn btn-sm btn-danger remove-aggregate';
+                    removeBtn.innerHTML = '&times;';
+                    removeBtn.addEventListener('click', () => {
+                        this.aggregateColumns.splice(index, 1);
+                        this.updateSqlPreview();
+                        this.updateAggregateColumns();
+                    });
+                    
+                    aggColEl.appendChild(aggText);
+                    aggColEl.appendChild(removeBtn);
+                    aggColumnsContainer.appendChild(aggColEl);
+                });
             }
         }
         
@@ -360,8 +471,9 @@ $(function () {
             let sql = 'SELECT ';
             
             // Add selected columns
-            if (this.selectedColumns.length > 0) {
-                sql += this.selectedColumns.join(', ');
+            const allColumns = [...this.selectedColumns, ...this.aggregateColumns];
+            if (allColumns.length > 0) {
+                sql += allColumns.join(', ');
             } else {
                 sql += '*';
             }
