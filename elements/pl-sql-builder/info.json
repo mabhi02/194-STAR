@@ -1,0 +1,11 @@
+{
+    "controller": "pl-sql-builder.py",
+    "dependencies": {
+        "elementScripts": [
+            "pl-sql-builder.js"
+        ],
+        "elementStyles": [
+            "pl-sql-builder.css"
+        ]
+    }
+} 

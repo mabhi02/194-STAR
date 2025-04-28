@@ -8,17 +8,10 @@
             <li>Add WHERE conditions to filter your results.</li>
             <li>Use GROUP BY and HAVING for aggregation.</li>
             <li>Order your results using ORDER BY.</li>
-            <li>Click "Run Query" to execute and see results.</li>
         </ul>
     </div>
 
     <div class="controls">
-        <div class="d-flex justify-content-end mb-3">
-            <button id="reset-builder-{{uuid}}" class="btn btn-outline-secondary btn-sm me-2">
-                <i class="fas fa-undo me-1"></i>Reset Builder
-            </button>
-        </div>
-
         <ul class="nav nav-tabs" id="builder-tabs-{{uuid}}">
             <li class="nav-item">
                 <a class="nav-link active" id="select-tab-{{uuid}}" data-bs-toggle="tab" href="#select-content-{{uuid}}">SELECT</a>
@@ -45,6 +38,11 @@
                     <select id="select-table-{{uuid}}" class="form-select">
                         <option value="">-- Select a table --</option>
                     </select>
+                </div>
+                
+                <div class="builder-section">
+                    <label>Table Alias:</label>
+                    <input type="text" id="table-alias-{{uuid}}" class="form-control" placeholder="e.g., c for customers">
                 </div>
                 
                 <div class="builder-section">
@@ -75,8 +73,20 @@
                 </div>
                 
                 <div class="builder-section">
+                    <label>Join Table Alias:</label>
+                    <input type="text" id="join-table-alias-{{uuid}}" class="form-control" placeholder="e.g., o for orders">
+                </div>
+                
+                <div class="builder-section">
+                    <label>Select Join Columns:</label>
+                    <div id="join-columns-{{uuid}}" class="column-selector">
+                        <!-- Join columns will be populated dynamically -->
+                    </div>
+                </div>
+                
+                <div class="builder-section">
                     <label>Join Condition:</label>
-                    <input type="text" id="join-condition-{{uuid}}" class="form-control" placeholder="e.g., table1.column = table2.column">
+                    <input type="text" id="join-condition-{{uuid}}" class="form-control" placeholder="e.g., c.id = o.customer_id">
                 </div>
             </div>
 
@@ -84,7 +94,7 @@
             <div class="tab-pane fade" id="where-content-{{uuid}}">
                 <div class="builder-section">
                     <label>WHERE Condition:</label>
-                    <input type="text" id="where-condition-{{uuid}}" class="form-control" placeholder="e.g., column > 100">
+                    <input type="text" id="where-condition-{{uuid}}" class="form-control" placeholder="e.g., c.id > 100">
                 </div>
             </div>
 
@@ -106,10 +116,10 @@
             <!-- ORDER BY Tab -->
             <div class="tab-pane fade" id="order-content-{{uuid}}">
                 <div class="builder-section">
-                    <label>ORDER BY Column:</label>
-                    <select id="order-column-{{uuid}}" class="form-select">
-                        <option value="">-- Select a column --</option>
-                    </select>
+                    <label>ORDER BY Columns:</label>
+                    <div id="order-columns-{{uuid}}" class="column-selector">
+                        <!-- Columns will be populated dynamically -->
+                    </div>
                 </div>
                 
                 <div class="builder-section">
@@ -128,30 +138,17 @@
         <pre id="sql-preview-{{uuid}}" class="bg-light p-3 rounded"></pre>
     </div>
 
-    <div class="d-flex justify-content-end mt-3">
-        <button id="run-builder-query-{{uuid}}" class="btn btn-primary">
-            <i class="fas fa-play me-1"></i>Run Query
-        </button>
-    </div>
-
-    <div class="results mt-3">
-        <h5>Results:</h5>
-        <div id="query-results-{{uuid}}" class="table-responsive">
-            <!-- Results will be displayed here -->
-        </div>
-    </div>
-
     <div class="schema-info mt-4">
         <h5>Database Schema:</h5>
-        <div id="schema-tables-{{uuid}}">
+        <div id="schema-tables-{{uuid}}" class="schema-tables">
             <!-- Schema tables will be displayed here -->
         </div>
     </div>
 
     <div class="table-relation-diagram mt-4">
         <h5>Table Relationships:</h5>
-        <div id="table-relation-diagram-{{uuid}}">
+        <div id="table-relation-diagram-{{uuid}}" class="relation-diagram">
             <!-- Relationship diagram will be displayed here -->
         </div>
     </div>
-</div> 
+</div>

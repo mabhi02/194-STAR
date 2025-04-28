@@ -3,33 +3,61 @@ $(function () {
     document.querySelectorAll('[id^="pl-sql-builder-"]').forEach(function(builderElement) {
         const uuid = builderElement.id.replace('pl-sql-builder-', '');
         
-        // Initialize SQL.js
-        initSqlJs({
-            locateFile: file => `${window.PLConfig.clientFilesCourseUrl}/sql.js/${file}`
-        }).then(SQL => {
-            // Create a database
-            const db = new SQL.Database();
-            
+        try {
             // Get schema and init SQL from data attributes
             const schema = JSON.parse(builderElement.dataset.schema || '[]');
             const initSql = builderElement.dataset.initSql || '';
             
-            // Setup the database
-            setupDatabase(db, schema, initSql);
+            if (!schema || schema.length === 0) {
+                throw new Error('No schema provided');
+            }
             
-            // Initialize the query builder
-            const builder = new SQLQueryBuilder(db, uuid);
-            builder.initialize();
+            // Load SQL.js
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
+            script.async = true;
             
-            // Display schema
-            displayDatabaseSchema(db, uuid);
+            script.onload = function() {
+                // Initialize SQL.js
+                initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+                }).then(SQL => {
+                    try {
+                        // Create a database
+                        const db = new SQL.Database();
+                        
+                        // Setup the database
+                        setupDatabase(db, schema, initSql);
+                        
+                        // Initialize the query builder
+                        const builder = new SQLQueryBuilder(db, uuid);
+                        builder.initialize();
+                        
+                        // Display schema
+                        displayDatabaseSchema(db, uuid);
+                        
+                        // Display relationship diagram
+                        displayRelationshipDiagram(uuid);
+                    } catch (err) {
+                        showToast(uuid, 'Error setting up database: ' + err.message, 'danger');
+                        console.error('Database setup error:', err);
+                    }
+                }).catch(err => {
+                    showToast(uuid, 'Error loading SQL.js: ' + err.message, 'danger');
+                    console.error('SQL.js loading error:', err);
+                });
+            };
             
-            // Display relationship diagram
-            displayRelationshipDiagram(uuid);
+            script.onerror = function() {
+                showToast(uuid, 'Error loading SQL.js script', 'danger');
+                console.error('Failed to load SQL.js script');
+            };
             
-        }).catch(err => {
-            showToast(uuid, 'Error initializing SQL database: ' + err.message, 'danger');
-        });
+            document.head.appendChild(script);
+        } catch (err) {
+            showToast(uuid, 'Error parsing schema: ' + err.message, 'danger');
+            console.error('Schema parsing error:', err);
+        }
     });
 
     // SQLQueryBuilder class
@@ -49,21 +77,22 @@ $(function () {
             this.whereCondition = '';
             this.groupColumns = [];
             this.havingCondition = '';
-            this.orderColumn = '';
+            this.orderColumns = [];
             this.orderDirection = 'ASC';
             
             // Builder elements
             this.builderSection = document.getElementById(`pl-sql-builder-${uuid}`);
-            this.resetBtn = document.getElementById(`reset-builder-${uuid}`);
-            this.runBtn = document.getElementById(`run-builder-query-${uuid}`);
             
             // SELECT tab elements
             this.selectTableEl = document.getElementById(`select-table-${uuid}`);
+            this.tableAliasEl = document.getElementById(`table-alias-${uuid}`);
             this.selectColumnsEl = document.getElementById(`select-columns-${uuid}`);
             
             // JOIN tab elements
             this.joinTypeEl = document.getElementById(`join-type-${uuid}`);
             this.joinTableEl = document.getElementById(`join-table-${uuid}`);
+            this.joinTableAliasEl = document.getElementById(`join-table-alias-${uuid}`);
+            this.joinColumnsEl = document.getElementById(`join-columns-${uuid}`);
             this.joinConditionEl = document.getElementById(`join-condition-${uuid}`);
             
             // WHERE tab elements
@@ -74,32 +103,24 @@ $(function () {
             this.havingConditionEl = document.getElementById(`having-condition-${uuid}`);
             
             // ORDER BY tab elements
-            this.orderColumnEl = document.getElementById(`order-column-${uuid}`);
+            this.orderColumnsEl = document.getElementById(`order-columns-${uuid}`);
             this.orderDirectionEl = document.getElementById(`order-direction-${uuid}`);
             
             // SQL preview element
             this.sqlPreviewEl = document.getElementById(`sql-preview-${uuid}`);
-            
-            // Results elements
-            this.resultsContent = document.getElementById('results-content');
-            this.chartContainer = document.getElementById('chart-container');
         }
         
         initialize() {
-            // Reset builder
-            this.resetBtn.addEventListener('click', () => {
-                this.resetBuilder();
-            });
-            
-            // Run query
-            this.runBtn.addEventListener('click', () => {
-                this.runQuery();
-            });
-            
             // Add event listeners for form controls
             this.selectTableEl.addEventListener('change', () => {
                 this.selectedTable = this.selectTableEl.value;
+                this.tableAlias = this.tableAliasEl.value || this.selectedTable.charAt(0).toLowerCase();
                 this.populateColumns();
+                this.updateSqlPreview();
+            });
+            
+            this.tableAliasEl.addEventListener('input', () => {
+                this.tableAlias = this.tableAliasEl.value || this.selectedTable.charAt(0).toLowerCase();
                 this.updateSqlPreview();
             });
             
@@ -110,7 +131,13 @@ $(function () {
             
             this.joinTableEl.addEventListener('change', () => {
                 this.joinTable = this.joinTableEl.value;
+                this.joinTableAlias = this.joinTableAliasEl.value || this.joinTable.charAt(0).toLowerCase();
                 this.populateJoinColumns();
+                this.updateSqlPreview();
+            });
+            
+            this.joinTableAliasEl.addEventListener('input', () => {
+                this.joinTableAlias = this.joinTableAliasEl.value || this.joinTable.charAt(0).toLowerCase();
                 this.updateSqlPreview();
             });
             
@@ -126,11 +153,6 @@ $(function () {
             
             this.havingConditionEl.addEventListener('input', () => {
                 this.havingCondition = this.havingConditionEl.value;
-                this.updateSqlPreview();
-            });
-            
-            this.orderColumnEl.addEventListener('input', () => {
-                this.orderColumn = this.orderColumnEl.value;
                 this.updateSqlPreview();
             });
             
@@ -177,14 +199,43 @@ $(function () {
             // Clear existing columns
             this.selectColumnsEl.innerHTML = '';
             this.groupColumnsEl.innerHTML = '';
+            this.orderColumnsEl.innerHTML = '';
             this.selectedColumns = [];
             this.groupColumns = [];
+            this.orderColumns = [];
             
             if (!this.selectedTable) return;
             
             // Get columns for the selected table
             try {
                 const pragma = this.db.exec(`PRAGMA table_info(${this.selectedTable})`)[0];
+                
+                // Add aggregate functions section
+                const aggregateSection = document.createElement('div');
+                aggregateSection.className = 'aggregate-section';
+                aggregateSection.innerHTML = '<h6>Aggregate Functions</h6>';
+                
+                const aggregateFunctions = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX'];
+                aggregateFunctions.forEach(func => {
+                    const funcEl = document.createElement('div');
+                    funcEl.className = 'column-option aggregate';
+                    funcEl.textContent = `${func}()`;
+                    funcEl.addEventListener('click', () => {
+                        const column = prompt(`Enter column name for ${func}:`);
+                        if (column) {
+                            this.selectedColumns.push(`${func}(${this.tableAlias}.${column}) as ${func.toLowerCase()}_${column}`);
+                            this.updateSqlPreview();
+                        }
+                    });
+                    aggregateSection.appendChild(funcEl);
+                });
+                
+                this.selectColumnsEl.appendChild(aggregateSection);
+                
+                // Add regular columns section
+                const columnsSection = document.createElement('div');
+                columnsSection.className = 'columns-section';
+                columnsSection.innerHTML = '<h6>Columns</h6>';
                 
                 // Create a clickable option for each column
                 pragma.values.forEach(col => {
@@ -202,15 +253,15 @@ $(function () {
                         columnEl.classList.toggle('selected');
                         
                         if (columnEl.classList.contains('selected')) {
-                            this.selectedColumns.push(colName);
+                            this.selectedColumns.push(`${this.tableAlias}.${colName}`);
                         } else {
-                            this.selectedColumns = this.selectedColumns.filter(col => col !== colName);
+                            this.selectedColumns = this.selectedColumns.filter(col => col !== `${this.tableAlias}.${colName}`);
                         }
                         
                         this.updateSqlPreview();
                     });
                     
-                    this.selectColumnsEl.appendChild(columnEl);
+                    columnsSection.appendChild(columnEl);
                     
                     // Create column option element for GROUP BY
                     const groupColumnEl = document.createElement('div');
@@ -223,16 +274,39 @@ $(function () {
                         groupColumnEl.classList.toggle('selected');
                         
                         if (groupColumnEl.classList.contains('selected')) {
-                            this.groupColumns.push(colName);
+                            this.groupColumns.push(`${this.tableAlias}.${colName}`);
                         } else {
-                            this.groupColumns = this.groupColumns.filter(col => col !== colName);
+                            this.groupColumns = this.groupColumns.filter(col => col !== `${this.tableAlias}.${colName}`);
                         }
                         
                         this.updateSqlPreview();
                     });
                     
                     this.groupColumnsEl.appendChild(groupColumnEl);
+                    
+                    // Create column option element for ORDER BY
+                    const orderColumnEl = document.createElement('div');
+                    orderColumnEl.className = 'column-option';
+                    orderColumnEl.dataset.column = colName;
+                    orderColumnEl.textContent = colName;
+                    
+                    // Add click event to toggle order by selection
+                    orderColumnEl.addEventListener('click', () => {
+                        orderColumnEl.classList.toggle('selected');
+                        
+                        if (orderColumnEl.classList.contains('selected')) {
+                            this.orderColumns.push(`${this.tableAlias}.${colName}`);
+                        } else {
+                            this.orderColumns = this.orderColumns.filter(col => col !== `${this.tableAlias}.${colName}`);
+                        }
+                        
+                        this.updateSqlPreview();
+                    });
+                    
+                    this.orderColumnsEl.appendChild(orderColumnEl);
                 });
+                
+                this.selectColumnsEl.appendChild(columnsSection);
             } catch (error) {
                 console.error('Error fetching columns:', error);
             }
@@ -265,9 +339,11 @@ $(function () {
                         columnEl.classList.toggle('selected');
                         
                         if (columnEl.classList.contains('selected')) {
-                            this.joinColumns.push(colName);
+                            this.joinColumns.push(`${this.joinTableAlias}.${colName}`);
+                            this.selectedColumns.push(`${this.joinTableAlias}.${colName}`);
                         } else {
-                            this.joinColumns = this.joinColumns.filter(col => col !== colName);
+                            this.joinColumns = this.joinColumns.filter(col => col !== `${this.joinTableAlias}.${colName}`);
+                            this.selectedColumns = this.selectedColumns.filter(col => col !== `${this.joinTableAlias}.${colName}`);
                         }
                         
                         this.updateSqlPreview();
@@ -283,23 +359,21 @@ $(function () {
         updateSqlPreview() {
             let sql = 'SELECT ';
             
-            // Add columns
+            // Add selected columns
             if (this.selectedColumns.length > 0) {
                 sql += this.selectedColumns.join(', ');
             } else {
                 sql += '*';
             }
             
-            // Add FROM clause
+            // Add FROM clause with alias
             if (this.selectedTable) {
-                sql += ` FROM ${this.selectedTable}`;
-            } else {
-                sql += ' FROM table';
+                sql += ` FROM ${this.selectedTable} ${this.tableAlias}`;
             }
             
-            // Add JOIN clause
+            // Add JOIN clause with alias
             if (this.joinTable && this.joinCondition) {
-                sql += `\n${this.joinType} ${this.joinTable} ON ${this.joinCondition}`;
+                sql += `\n${this.joinType} ${this.joinTable} ${this.joinTableAlias} ON ${this.joinCondition}`;
             }
             
             // Add WHERE clause
@@ -318,440 +392,124 @@ $(function () {
             }
             
             // Add ORDER BY clause
-            if (this.orderColumn) {
-                sql += `\nORDER BY ${this.orderColumn} ${this.orderDirection}`;
+            if (this.orderColumns.length > 0) {
+                sql += `\nORDER BY ${this.orderColumns.join(', ')} ${this.orderDirection}`;
             }
             
             // Update SQL preview
             this.sqlPreviewEl.textContent = sql;
         }
-        
-        resetBuilder() {
-            // Reset all fields
-            this.selectedTable = '';
-            this.selectedColumns = [];
-            this.joinType = 'INNER JOIN';
-            this.joinTable = '';
-            this.joinCondition = '';
-            this.joinColumns = [];
-            this.whereCondition = '';
-            this.groupColumns = [];
-            this.havingCondition = '';
-            this.orderColumn = '';
-            this.orderDirection = 'ASC';
-            
-            // Reset form controls
-            this.selectTableEl.value = '';
-            this.selectColumnsEl.innerHTML = '';
-            this.groupColumnsEl.innerHTML = '';
-            this.joinTypeEl.value = 'INNER JOIN';
-            this.joinTableEl.value = '';
-            this.joinConditionEl.value = '';
-            this.joinColumnsEl.innerHTML = '';
-            this.whereConditionEl.value = '';
-            this.havingConditionEl.value = '';
-            this.orderColumnEl.value = '';
-            this.orderDirectionEl.value = 'ASC';
-            
-            // Update SQL preview
-            this.updateSqlPreview();
-            
-            // Clear results
-            this.resultsContent.innerHTML = `
-                <div class="alert alert-info">
-                    Results will appear here after you run a query.
-                </div>
-            `;
-            
-            // Clear chart
-            this.chartContainer.innerHTML = '';
-        }
-        
-        runQuery() {
-            const sql = this.sqlPreviewEl.textContent;
-            
-            if (sql.trim() === '' || !this.selectedTable) {
-                showToast(this.uuid, 'Please select a table and build a valid query', 'warning');
-                return;
-            }
-            
-            try {
-                // Execute the query and display results
-                this.executeQueryAndDisplay(sql);
-                showToast(this.uuid, 'Query executed successfully', 'success');
-            } catch (error) {
-                showToast(this.uuid, `Error executing query: ${error.message}`, 'danger');
-            }
-        }
-        
-        executeQueryAndDisplay(query) {
-            try {
-                // Execute query
-                const results = this.db.exec(query);
-                
-                if (results.length === 0) {
-                    // Query executed but no results
-                    this.resultsContent.innerHTML = `
-                        <div class="alert alert-success">
-                            Query executed successfully. No results returned.
-                        </div>
-                    `;
-                    // Clear any existing chart
-                    this.chartContainer.innerHTML = '';
-                    return;
-                }
-                
-                // Get query results
-                const columns = results[0].columns;
-                const values = results[0].values;
-                
-                // Create table for results
-                let tableHtml = `
-                    <div class="table-container">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                `;
-                
-                // Add table headers
-                columns.forEach(col => {
-                    tableHtml += `<th>${col}</th>`;
-                });
-                
-                tableHtml += `
-                                </tr>
-                            </thead>
-                            <tbody>
-                `;
-                
-                // Add table rows
-                values.forEach(row => {
-                    tableHtml += '<tr>';
-                    row.forEach(cell => {
-                        tableHtml += `<td>${cell !== null ? cell : 'NULL'}</td>`;
-                    });
-                    tableHtml += '</tr>';
-                });
-                
-                tableHtml += `
-                            </tbody>
-                        </table>
-                    </div>
-                    <p>${values.length} row(s) returned</p>
-                `;
-                
-                this.resultsContent.innerHTML = tableHtml;
-                
-                // Create visualization if appropriate
-                this.createVisualization(query, results[0]);
-                
-            } catch (error) {
-                // Query execution failed
-                this.resultsContent.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        Error executing query: ${error.message}
-                    </div>
-                `;
-                // Clear any existing chart
-                this.chartContainer.innerHTML = '';
-            }
-        }
-        
-        createVisualization(query, results) {
-            // Clear previous chart
-            this.chartContainer.innerHTML = '';
-            
-            // Check if results can be visualized
-            if (!results || results.values.length === 0) return;
-            
-            // Determine if this query is good for visualization
-            const columns = results.columns;
-            const values = results.values;
-            
-            // Simple heuristic: If we have 2+ columns and one looks like a category and another is numeric
-            if (columns.length >= 2) {
-                const possibleChartTypes = [];
-                
-                // Check for aggregations
-                const hasAggregation = query.toUpperCase().includes('COUNT(') || 
-                                     query.toUpperCase().includes('SUM(') ||
-                                     query.toUpperCase().includes('AVG(') ||
-                                     query.toUpperCase().includes('MIN(') ||
-                                     query.toUpperCase().includes('MAX(');
-                
-                // Check if we have a GROUP BY
-                const hasGroupBy = query.toUpperCase().includes('GROUP BY');
-                
-                // If we have aggregation and group by, this is likely a good candidate for a bar chart
-                if (hasAggregation && hasGroupBy) {
-                    possibleChartTypes.push('bar');
-                }
-                
-                // If we have few rows and mostly text columns, a pie chart might be good
-                if (values.length <= 8 && 
-                    columns.find(col => 
-                        values.every(row => typeof row[columns.indexOf(col)] === 'string' || 
-                                       typeof row[columns.indexOf(col)] === 'number'))) {
-                    possibleChartTypes.push('pie');
-                }
-                
-                // If we have a date/time column and a numeric column, a line chart might be good
-                if (columns.find(col => values.some(row => row[columns.indexOf(col)]?.toString().match(/^\d{4}-\d{2}-\d{2}/))) &&
-                    columns.find(col => values.every(row => typeof row[columns.indexOf(col)] === 'number' || 
-                                       (!isNaN(parseFloat(row[columns.indexOf(col)])) && row[columns.indexOf(col)] !== null)))) {
-                    possibleChartTypes.push('line');
-                }
-                
-                // Default to bar chart if possible
-                const chartType = possibleChartTypes.includes('bar') ? 'bar' : 
-                                 (possibleChartTypes.includes('pie') ? 'pie' : 
-                                 (possibleChartTypes.includes('line') ? 'line' : null));
-                
-                if (chartType) {
-                    // Create canvas for chart
-                    const canvas = document.createElement('canvas');
-                    this.chartContainer.appendChild(canvas);
-                    
-                    // Determine which columns to use
-                    let labelColumn = 0;
-                    let dataColumn = 1;
-                    
-                    // Find a suitable label column (preferably text)
-                    for (let i = 0; i < columns.length; i++) {
-                        if (values.every(row => typeof row[i] === 'string')) {
-                            labelColumn = i;
-                            break;
-                        }
-                    }
-                    
-                    // Find a suitable data column (must be numeric)
-                    for (let i = 0; i < columns.length; i++) {
-                        if (i !== labelColumn && values.every(row => 
-                            typeof row[i] === 'number' || 
-                            (!isNaN(parseFloat(row[i])) && row[i] !== null))) {
-                            dataColumn = i;
-                            break;
-                        }
-                    }
-                    
-                    // Extract data
-                    const labels = values.map(row => row[labelColumn]);
-                    const data = values.map(row => parseFloat(row[dataColumn]));
-                    
-                    // Create chart
-                    new Chart(canvas, {
-                        type: chartType,
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: columns[dataColumn],
-                                data: data,
-                                backgroundColor: chartType === 'line' ? 'rgba(67, 97, 238, 0.2)' : 
-                                    labels.map((_, i) => {
-                                        const hue = (i * 30) % 360;
-                                        return chartType === 'pie' ? 
-                                            `hsl(${hue}, 70%, 60%)` : 
-                                            `rgba(67, 97, 238, ${0.5 + (i * 0.5 / labels.length)})`;
-                                    }),
-                                borderColor: chartType === 'line' ? 'rgba(67, 97, 238, 1)' : 
-                                    labels.map((_, i) => {
-                                        const hue = (i * 30) % 360;
-                                        return chartType === 'pie' ? 
-                                            `hsl(${hue}, 70%, 50%)` : 
-                                            'rgba(67, 97, 238, 1)';
-                                    }),
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    display: chartType !== 'pie'
-                                },
-                                x: {
-                                    display: chartType !== 'pie'
-                                }
-                            }
-                        }
-                    });
-                }
-            }
-        }
     }
     
     // Set up database with sample data
     function setupDatabase(db, schema, initSql) {
-        // Create customers table
-        db.run(`
-            CREATE TABLE customers (
-                customer_id INTEGER PRIMARY KEY,
-                first_name TEXT,
-                last_name TEXT,
-                email TEXT,
-                city TEXT,
-                state TEXT,
-                country TEXT,
-                registration_date TEXT
-            )
-        `);
-        
-        // Insert sample customers
-        const customerData = [
-            [1, 'John', 'Smith', 'john.smith@example.com', 'New York', 'NY', 'USA', '2022-01-15'],
-            [2, 'Emily', 'Johnson', 'emily.j@example.com', 'Toronto', 'ON', 'Canada', '2022-02-20'],
-            [3, 'Michael', 'Williams', 'michael.w@example.com', 'Chicago', 'IL', 'USA', '2022-03-10'],
-            [4, 'Sophia', 'Brown', 'sophia.b@example.com', 'London', 'UK', 'UK', '2022-01-05'],
-            [5, 'Daniel', 'Jones', 'daniel.j@example.com', 'Sydney', 'NSW', 'Australia', '2022-04-12']
-        ];
-        
-        customerData.forEach(customer => {
-            db.run(
-                'INSERT INTO customers VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-                customer
-            );
+        // Create tables from schema
+        schema.forEach(table => {
+            const columns = table.columns.map(col => {
+                let colDef = `${col.name} ${col.type}`;
+                if (col.primaryKey) colDef += ' PRIMARY KEY';
+                if (col.foreignKey) {
+                    colDef += ` REFERENCES ${col.foreignKey.table}(${col.foreignKey.column})`;
+                }
+                return colDef;
+            }).join(', ');
+            
+            db.run(`CREATE TABLE ${table.name} (${columns})`);
         });
         
-        // Create orders table
-        db.run(`
-            CREATE TABLE orders (
-                order_id INTEGER PRIMARY KEY,
-                customer_id INTEGER,
-                order_date TEXT,
-                total_amount REAL,
-                status TEXT,
-                FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
-            )
-        `);
-        
-        // Insert sample orders
-        const orderData = [
-            [1, 1, '2023-01-10', 1349.98, 'Delivered'],
-            [2, 2, '2023-01-15', 899.99, 'Delivered'],
-            [3, 3, '2023-02-05', 279.98, 'Shipped'],
-            [4, 4, '2023-02-10', 129.99, 'Delivered'],
-            [5, 5, '2023-02-20', 429.98, 'Processing']
-        ];
-        
-        orderData.forEach(order => {
-            db.run(
-                'INSERT INTO orders VALUES (?, ?, ?, ?, ?)',
-                order
-            );
-        });
+        // Execute initialization SQL
+        if (initSql) {
+            db.run(initSql);
+        }
     }
     
-    // Display database schema function
+    // Display database schema
     function displayDatabaseSchema(db, uuid) {
-        // Get tables from the database
-        const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table'")[0].values;
-        const schemaTablesContainer = document.getElementById(`schema-tables-${uuid}`);
+        const schemaContainer = document.getElementById(`schema-tables-${uuid}`);
+        schemaContainer.innerHTML = '';
         
-        // Create HTML for each table
-        const schemaHtml = tables.map(table => {
-            const tableName = table[0];
+        try {
+            const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table'")[0].values;
             
-            // Get table columns
-            const pragma = db.exec(`PRAGMA table_info(${tableName})`)[0];
-            
-            // Create HTML for the table schema
-            let html = `
-                <div class="schema-table">
-                    <div class="schema-table-header" data-table="${tableName}">
-                        <i class="fas fa-table me-2"></i>${tableName}
-                        <i class="fas fa-chevron-down float-end"></i>
-                    </div>
-                    <div class="schema-table-content" id="schema-${tableName}-${uuid}">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Column</th>
-                                    <th>Type</th>
-                                    <th>PK</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-            `;
-            
-            // Add rows for each column
-            pragma.values.forEach(col => {
-                const colName = col[1];
-                const colType = col[2];
-                const isPK = col[5] === 1 ? 'Yes' : 'No';
+            tables.forEach(table => {
+                const tableName = table[0];
+                const tableDiv = document.createElement('div');
+                tableDiv.className = 'schema-table';
                 
-                html += `
-                    <tr>
-                        <td>${colName}</td>
-                        <td>${colType}</td>
-                        <td>${isPK}</td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            `;
-            
-            return html;
-        }).join('');
-        
-        // Add schema HTML to container
-        schemaTablesContainer.innerHTML = schemaHtml;
-        
-        // Add event listeners to table headers
-        document.querySelectorAll(`#schema-tables-${uuid} .schema-table-header`).forEach(header => {
-            header.addEventListener('click', () => {
-                const content = header.nextElementSibling;
-                content.classList.toggle('active');
+                // Get table info
+                const pragma = db.exec(`PRAGMA table_info(${tableName})`)[0];
                 
-                const icon = header.querySelector('.fas.fa-chevron-down, .fas.fa-chevron-up');
-                icon.classList.toggle('fa-chevron-down');
-                icon.classList.toggle('fa-chevron-up');
+                let tableHtml = `<h6>${tableName}</h6><ul>`;
+                pragma.values.forEach(col => {
+                    const colName = col[1];
+                    const colType = col[2];
+                    const isPK = col[5] === 1 ? ' PRIMARY KEY' : '';
+                    const isFK = col[6] ? ` REFERENCES ${col[6]}` : '';
+                    tableHtml += `<li>${colName} ${colType}${isPK}${isFK}</li>`;
+                });
+                tableHtml += '</ul>';
+                
+                tableDiv.innerHTML = tableHtml;
+                schemaContainer.appendChild(tableDiv);
             });
-        });
+        } catch (error) {
+            console.error('Error displaying schema:', error);
+        }
     }
     
     // Display relationship diagram
     function displayRelationshipDiagram(uuid) {
-        // Create a simple SVG diagram of table relationships
-        const diagram = `
-            <svg width="350" height="200" xmlns="http://www.w3.org/2000/svg">
-                <!-- Tables -->
-                <rect x="20" y="20" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
-                <text x="70" y="50" text-anchor="middle" font-size="12">customers</text>
-                
-                <rect x="230" y="20" width="100" height="50" rx="5" fill="#e9ecef" stroke="#495057" />
-                <text x="280" y="50" text-anchor="middle" font-size="12">orders</text>
-                
-                <!-- Relationships -->
-                <line x1="120" y1="45" x2="230" y2="45" stroke="#495057" stroke-width="2" />
-                <polygon points="220,40 230,45 220,50" fill="#495057" />
-            </svg>
-        `;
+        const diagramContainer = document.getElementById(`table-relation-diagram-${uuid}`);
+        diagramContainer.innerHTML = '';
         
-        document.querySelector(`#table-relation-diagram-${uuid}`).innerHTML = diagram;
+        // Create a simple SVG diagram showing table relationships
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '100%');
+        svg.setAttribute('height', '200');
+        
+        // Add table boxes and relationships
+        // This is a simplified version - you might want to use a proper graph library
+        const tables = document.querySelectorAll(`#schema-tables-${uuid} .schema-table`);
+        let x = 50;
+        
+        tables.forEach(table => {
+            const tableName = table.querySelector('h6').textContent;
+            
+            // Create table box
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('x', x);
+            rect.setAttribute('y', 50);
+            rect.setAttribute('width', 150);
+            rect.setAttribute('height', 100);
+            rect.setAttribute('fill', '#f8f9fa');
+            rect.setAttribute('stroke', '#6c757d');
+            rect.setAttribute('stroke-width', '2');
+            svg.appendChild(rect);
+            
+            // Add table name
+            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            text.setAttribute('x', x + 75);
+            text.setAttribute('y', 80);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('font-size', '14');
+            text.textContent = tableName;
+            svg.appendChild(text);
+            
+            x += 200;
+        });
+        
+        diagramContainer.appendChild(svg);
     }
     
-    // Toast notification function
+    // Show toast notification
     function showToast(uuid, message, type = 'info') {
         const toast = document.createElement('div');
-        toast.className = `toast show`;
+        toast.className = `toast show bg-${type} text-white`;
+        toast.style.position = 'fixed';
+        toast.style.top = '20px';
+        toast.style.right = '20px';
+        toast.style.zIndex = '1000';
         toast.innerHTML = `
-            <div class="toast-header bg-${type} text-white">
-                <strong class="me-auto">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 
-                                  type === 'warning' ? 'fa-exclamation-triangle' : 
-                                  type === 'danger' ? 'fa-times-circle' : 'fa-info-circle'} me-2"></i>
-                    ${type.charAt(0).toUpperCase() + type.slice(1)}
-                </strong>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
             <div class="toast-body">
                 ${message}
             </div>
@@ -759,27 +517,8 @@ $(function () {
         
         document.body.appendChild(toast);
         
-        // Auto-hide after 5 seconds
         setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => {
-                if (document.body.contains(toast)) {
-                    document.body.removeChild(toast);
-                }
-            }, 500);
-        }, 5000);
-        
-        // Close button functionality
-        const closeBtn = toast.querySelector('.btn-close');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                toast.classList.remove('show');
-                setTimeout(() => {
-                    if (document.body.contains(toast)) {
-                        document.body.removeChild(toast);
-                    }
-                }, 500);
-            });
-        }
+            toast.remove();
+        }, 3000);
     }
-}); 
+});
